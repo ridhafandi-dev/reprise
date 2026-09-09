@@ -10,6 +10,7 @@ swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
   "$REPRISE_ROOT/Reprise/App.swift" "$REPRISE_ROOT/Reprise/Thread.swift" \
   "$REPRISE_ROOT/Reprise/Store.swift" "$REPRISE_ROOT/Reprise/Views.swift" \
   "$REPRISE_ROOT/Reprise/NotchSupport.swift" \
+  "$REPRISE_ROOT/Reprise/CompactNotch.swift" "$REPRISE_ROOT/Reprise/LibraryView.swift" \
   "$REPRISE_ROOT/Sources/Notch/SideNotchShape.swift" \
   "$REPRISE_ROOT/Sources/Notch/NotchMotion.swift" \
   -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/Reprise"
@@ -22,8 +23,8 @@ cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>tools.pulsar.reprise.study</string>
 <key>CFBundleName</key><string>Reprise</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.1.0</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>0.2.0</string>
+<key>CFBundleVersion</key><string>2</string>
 <key>LSMinimumSystemVersion</key><string>15.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSHumanReadableCopyright</key><string>Reprise 2026. Based on Codenotch © 2026 Vinz, MIT.</string>

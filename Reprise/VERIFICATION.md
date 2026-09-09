@@ -1,23 +1,29 @@
-# Vérification de Reprise 0.1.0
+# Reprise 0.2.0 — Vérification
 
-Base upstream : `0a6c6fb62b7fda52e4f8bd1ce7e8c7e7b8595b75`.
+## Diagnostic V1
 
-## Exécuté
+Les captures fournies par l’utilisateur montrent un signet disproportionné et une fenêtre principalement démonstrative. Le code confirme deux causes supplémentaires : la fenêtre native était redimensionnée immédiatement alors que SwiftUI animait son contenu ; le composant de démonstration partageait le survol avec le panneau latéral.
 
-- Compilation native Swift/SwiftUI/AppKit sur macOS 26, Apple Silicon.
-- Tests du modèle : URL non prises en charge refusées, chemins locaux acceptés, remplacement, libération et annulation, sauvegarde/relecture, refus d’écraser silencieusement une archive illisible.
-- Ouverture de l’app et inspection visuelle de la présentation, du volet déplié et de l’éditeur.
-- Saisie et sauvegarde d’un fil d’essai ; vérification du texte rendu dans le volet.
-- Libération de la place puis annulation ; retour du fil vérifié dans l’interface.
-- Clic sur Reprendre : ouverture de la bonne URL GitHub confirmée dans le navigateur.
-- Conservation du fil après fermeture et relancement de l’application.
-- Présentation finale : titre et sous-titre complets, volet réel intégré, ouverture par clic physique sur le signet, édition et sauvegarde vérifiées.
-- Signature ad hoc vérifiée dans le répertoire de packaging ; archive sans les métadonnées Finder ajoutées par File Provider dans Documents.
+## Changements
 
-## Limites de cette première livraison
+- Signet : 40 × 132 → 22 × 76 points, soit 68 % de surface en moins.
+- Volet : 382 × 448 → 288 × 280 points, soit 53 % de surface en moins.
+- Fenêtre latérale de taille fixe : seule la forme intérieure s’anime.
+- Un contrôleur du pointeur, issu du schéma Codenotch : événements locaux/globaux de mouvement, contrôle de secours toutes les 150 ms, zone active limitée à la forme visible.
+- Ouverture après 100 ms, grâce de fermeture de 300 ms, ressort de 300 ms amorti à 0,91. Reduce Motion respecte le réglage système.
+- Mes fils remplace la démonstration. Recherche, filtre De côté, édition, rangement durable, remise au bord, copie de phrase et choix du bord.
 
-- Glisser-déposer implémenté avec les types natifs URL/fichier/texte, mais la diversité des apps sources n’est pas encore validée.
-- Les actions du panneau non activant sont partiellement accessibles à l’outil de pilotage. Le clic physique sur le même composant a été vérifié dans la fenêtre de présentation ; le geste latéral reste à éprouver directement au pointeur par l’utilisateur.
-- Pas de validation sur Intel, sur macOS 15, avec VoiceOver, plusieurs écrans ou toutes les apps en plein écran.
-- Pas de notarisation ni de mise à jour automatique.
-- Le bénéfice sur la reprise d’attention est une hypothèse à éprouver en usage réel.
+## Vérifié
+
+- Compilation native et signature ad hoc du paquet sur Apple Silicon/macOS 26.
+- Tests du modèle : URL admises/refusées, chemins locaux, remplacement, annulation, sauvegarde, archive illisible.
+- Migration d’une archive V1 sans history ni identity ; conservation de l’ancien fil et déduplication après modification.
+- Tests du survol : passage de 40 ms ignoré, ouverture persistante, grâce à la sortie, retour annulant la fermeture, absence de report infini par le polling, repli explicite.
+- Dans l’app : récupération du fil rangé de V1 ; ajout d’un second fil ; filtre De côté ; sélection d’un ancien fil ; remise au bord.
+- Rendu inspecté : fenêtre Mes fils et volet compact, texte et actions visibles.
+
+## Limites
+
+Le ressenti au trackpad reste à confirmer par l’utilisateur. Les captures et les tests des délais ne prouvent pas une fluidité parfaite sur chaque écran. Le glisser-déposer n’a pas été éprouvé avec chaque application source. Pas de validation Intel, VoiceOver, multi-écran ou plein écran exhaustif ; le signet reste sur le premier écran. La fenêtre intérieure ne contient plus une seconde encoche qui commanderait la première.
+
+Les fichiers sont référencés par leur chemin. Aucun contenu de fichier n’est copié. Les fils conservés restent locaux, sans cloud ni compte IA. Distribution expérimentale non notarisée.

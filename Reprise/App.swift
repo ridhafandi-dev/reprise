@@ -9,7 +9,7 @@ final class ReprisePanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: 430, height: 488), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        super.init(contentRect: NSRect(x: 0, y: 0, width: 288, height: 304), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         level = .statusBar; collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
         isOpaque = false; backgroundColor = .clear; hasShadow = false
         hidesOnDeactivate = false; isReleasedWhenClosed = false
@@ -17,13 +17,9 @@ final class ReprisePanel: NSPanel {
 }
 
 final class RepriseHost: NSHostingView<RepriseNotch> {
-    var store: RepriseStore!
+    var interactiveRect = NSRect.zero
     override func hitTest(_ point: NSPoint) -> NSView? {
-        let width: CGFloat = store.isOpen ? 382 : 40
-        let height: CGFloat = store.isOpen ? 448 : 132
-        let x: CGFloat = store.side == .right ? bounds.maxX - width : 0
-        let visible = NSRect(x: x, y: (bounds.height - height) / 2, width: width, height: height)
-        guard visible.contains(point) else { return nil }
+        guard interactiveRect.contains(point) else { return nil }
         return super.hitTest(point)
     }
 }
@@ -35,13 +31,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var welcome: NSWindow?
     var editor: NSWindow?
     var status: NSStatusItem!
-    var monitor: Any?
+    var host: RepriseHost!
+    var monitors: [Any] = []
+    var cursorTimer: Timer?
     var screenObserver: Any?
     var ticks: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let main = NSMenu()
-        let appMenu = NSMenu(); appMenu.addItem(withTitle: "Présentation de Reprise", action: #selector(showPresentation), keyEquivalent: "0")
+        let appMenu = NSMenu(); appMenu.addItem(withTitle: "Mes fils", action: #selector(showPresentation), keyEquivalent: "0")
         appMenu.addItem(.separator()); appMenu.addItem(withTitle: "Quitter Reprise", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         let appItem = NSMenuItem(); appItem.submenu = appMenu; main.addItem(appItem)
         let editMenu = NSMenu(title: "Édition")
@@ -52,20 +50,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.mainMenu = main
 
         panel = ReprisePanel(); panel.title = "Reprise — Le fil"
-        let host = NSHostingView(rootView: RepriseNotch(store: store))
+        host = RepriseHost(rootView: RepriseNotch(store: store))
         panel.contentView = host
         store.openEditor = { [weak self] in self?.showEditor() }
         store.showWelcome = { [weak self] in self?.showPresentation() }
+        store.onShapeChange = { [weak self] in self?.reveal() }
         placePanel(); panel.orderFrontRegardless()
         screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.placePanel() }
         }
-        // Size the native window to the visible notch. A large invisible
-        // window with ignoresMouseEvents toggled by polling can swallow AX
-        // presses and incoming drags; the compact window needs no such timer.
+        // Keep the window frame fixed; only the SwiftUI shape animates.
+        // Cursor tracking is owned here, not by two competing SwiftUI views.
         ticks = store.objectWillChange.sink { [weak self] _ in
-            DispatchQueue.main.async { self?.placePanel() }
+            DispatchQueue.main.async { self?.placePanel(); self?.cursorMoved() }
         }
+        let eventTypes: NSEvent.EventTypeMask = [.mouseMoved, .leftMouseDragged]
+        if let global = NSEvent.addGlobalMonitorForEvents(matching: eventTypes, handler: { [weak self] _ in
+            MainActor.assumeIsolated { self?.cursorMoved() }
+        }) { monitors.append(global) }
+        if let local = NSEvent.addLocalMonitorForEvents(matching: eventTypes, handler: { [weak self] event in
+            MainActor.assumeIsolated { self?.cursorMoved() }; return event
+        }) { monitors.append(local) }
+        let timer = Timer(timeInterval: 0.15, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.cursorMoved() }
+        }
+        RunLoop.main.add(timer, forMode: .common); cursorTimer = timer
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         status.button?.image = NSImage(systemSymbolName: "bookmark", accessibilityDescription: "Reprise")
         let menu = NSMenu()
@@ -74,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(withTitle: "Coller un lien ou un extrait…", action: #selector(pasteThread), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Changer de bord", action: #selector(changeSide), keyEquivalent: "")
-        menu.addItem(withTitle: "Présentation", action: #selector(showPresentation), keyEquivalent: "")
+        menu.addItem(withTitle: "Mes fils", action: #selector(showPresentation), keyEquivalent: "")
         menu.addItem(.separator())
         menu.addItem(withTitle: "Quitter Reprise", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         for item in menu.items where item.action != #selector(NSApplication.terminate(_:)) { item.target = self }
@@ -84,12 +93,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func placePanel() {
         guard let screen = NSScreen.screens.first else { return }
         let frame = screen.frame
-        let width: CGFloat = store.isOpen ? 382 : 40
-        let height: CGFloat = store.isOpen ? 448 : 132
-        let target = NSRect(x: store.side == .right ? frame.maxX - width : frame.minX,
-                            y: frame.midY - height / 2 - min(80, frame.height * 0.08),
-                            width: width, height: height)
-        panel.setFrame(target, display: true)
+        let size = RepriseMetrics.canvas
+        let target = NSRect(x: store.side == .right ? frame.maxX - size.width : frame.minX,
+                            y: frame.midY - size.height / 2 - min(80, frame.height * 0.08),
+                            width: size.width, height: size.height)
+        if panel.frame != target { panel.setFrame(target, display: true) }
+    }
+    func cursorMoved() {
+        guard let panel, let host else { return }
+        let size = store.isOpen ? RepriseMetrics.open : RepriseMetrics.closed
+        let rect = NSRect(x: store.side == .right ? RepriseMetrics.canvas.width - size.width : 0,
+                          y: (RepriseMetrics.canvas.height - size.height) / 2,
+                          width: size.width, height: size.height)
+        host.interactiveRect = rect
+        let cursor = NSEvent.mouseLocation
+        let point = NSPoint(x: cursor.x - panel.frame.minX, y: panel.frame.maxY - cursor.y)
+        let inside = rect.insetBy(dx: -3, dy: -4).contains(point)
+        panel.ignoresMouseEvents = !inside && !store.targeted
+        if !store.editing { store.hover(inside) }
     }
     @objc func reveal() {
         welcome?.orderOut(nil); store.reveal(); panel.orderFrontRegardless()
@@ -98,11 +119,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func pasteThread() { store.paste() }
     @objc func changeSide() { store.side = store.side == .right ? .left : .right; placePanel() }
     @objc func showPresentation() {
+        store.fold()
         if welcome == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 870, height: 532), styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
-            window.title = "Reprise — Étude 01"; window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 820, height: 550), styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
+            window.title = "Reprise — Mes fils"; window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
             window.isReleasedWhenClosed = false; window.backgroundColor = NSColor(Ink.paper)
-            window.contentView = NSHostingView(rootView: WelcomeView(store: store) { [weak self] in self?.reveal() })
+            window.contentView = NSHostingView(rootView: LibraryView(store: store))
             window.center(); welcome = window
         }
         welcome?.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)

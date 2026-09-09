@@ -12,17 +12,26 @@ final class RepriseStore: ObservableObject {
     @Published var source = ""
     @Published var notice = ""
     @Published var error = ""
-    @Published var side: NotchEdge = .right
+    @Published var side: NotchEdge = .right {
+        didSet { UserDefaults.standard.set(side == .left ? "left" : "right", forKey: "reprise.edge") }
+    }
+    @Published var selectedID: String?
+    @Published var query = ""
+    @Published var onlyParked = false
     var openEditor: (() -> Void)?
     var onShapeChange: (() -> Void)?
     var showWelcome: (() -> Void)?
     private var closeWork: DispatchWorkItem?
     private var noticeWork: DispatchWorkItem?
     private var manualOpenUntil = Date.distantPast
+    private var openWork: DispatchWorkItem?
+    private var hoverInside = false
+    private var editingNote: ThreadNote?
     private let storage: URL
 
-    init() {
-        if let value = ProcessInfo.processInfo.environment["REPRISE_STATE_PATH"] {
+    init(storageURL: URL? = nil) {
+        if let storageURL { storage = storageURL }
+        else if let value = ProcessInfo.processInfo.environment["REPRISE_STATE_PATH"] {
             storage = URL(fileURLWithPath: value)
         } else {
             storage = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -30,42 +39,75 @@ final class RepriseStore: ObservableObject {
         }
         do { archive = try ThreadPersistence.load(from: storage) }
         catch { self.error = "Le fil enregistré ne peut pas être lu. Le fichier est conservé." }
+        side = UserDefaults.standard.string(forKey: "reprise.edge") == "left" ? .left : .right
     }
     var note: ThreadNote? { archive.current }
     var isOpen: Bool { expanded || targeted }
     var canSave: Bool { !intention.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var visibleNotes: [ThreadNote] {
+        archive.saved.filter { note in
+            (!onlyParked || note.id != archive.current?.id) &&
+            (query.isEmpty || [note.title, note.intention, note.source].joined(separator: " ").localizedStandardContains(query))
+        }
+    }
+    var selected: ThreadNote? {
+        if let selectedID, let found = visibleNotes.first(where: { $0.id == selectedID }) { return found }
+        if let current = archive.current, visibleNotes.contains(where: { $0.id == current.id }) { return current }
+        return visibleNotes.first
+    }
+    func pin(_ note: ThreadNote) {
+        var next = archive; next.keep(note)
+        if persist(next) { selectedID = note.id; flash("Ce fil est au bord.") }
+    }
+    func copyIntention(_ note: ThreadNote) {
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(note.intention, forType: .string)
+        flash("Phrase copiée.")
+    }
     func reveal() {
-        closeWork?.cancel()
+        closeWork?.cancel(); closeWork = nil; openWork?.cancel(); openWork = nil
         manualOpenUntil = Date().addingTimeInterval(3)
         expanded = true
     }
     func hover(_ inside: Bool) {
-        closeWork?.cancel()
-        if inside { expanded = true }
-        else if !editing {
-            let work = DispatchWorkItem { [weak self] in self?.expanded = false }
-            closeWork = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + max(0.65, manualOpenUntil.timeIntervalSinceNow), execute: work)
+        hoverInside = inside
+        if inside {
+            closeWork?.cancel(); closeWork = nil
+            guard !expanded, openWork == nil else { return }
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }; self.openWork = nil
+                if self.hoverInside { self.expanded = true }
+            }
+            openWork = work; DispatchQueue.main.asyncAfter(deadline: .now() + 0.10, execute: work)
+        } else {
+            openWork?.cancel(); openWork = nil
+            guard expanded, !editing, !targeted, closeWork == nil else { return }
+            let delay = max(0.30, manualOpenUntil.timeIntervalSinceNow)
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }; self.closeWork = nil
+                if !self.hoverInside && !self.editing && !self.targeted { self.expanded = false }
+            }
+            closeWork = work; DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
         }
     }
-    func fold() { closeWork?.cancel(); expanded = false; targeted = false }
+    func fold() { openWork?.cancel(); openWork = nil; closeWork?.cancel(); closeWork = nil; expanded = false; targeted = false }
     func flash(_ text: String) {
         noticeWork?.cancel(); notice = text
         let work = DispatchWorkItem { [weak self] in self?.notice = "" }
         noticeWork = work; DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: work)
     }
-    func edit(existing: Bool = false, dropped: String? = nil) {
+    func edit(existing: Bool = false, dropped: String? = nil, chosen: ThreadNote? = nil) {
         closeWork?.cancel(); error = ""
-        title = existing ? note?.title ?? "" : ""
-        intention = existing ? note?.intention ?? "" : ""
-        source = existing ? note?.source ?? "" : ""
+        editingNote = chosen ?? (existing ? note : nil)
+        title = editingNote?.title ?? ""
+        intention = editingNote?.intention ?? ""
+        source = editingNote?.source ?? ""
         if let dropped {
             if let url = ThreadNote.sourceURL(dropped) {
                 source = url.isFileURL ? url.path : url.absoluteString
                 title = url.isFileURL ? url.deletingPathExtension().lastPathComponent : url.host ?? ""
             } else { intention = String(dropped.prefix(1200)) }
         }
-        editing = true; expanded = true; openEditor?()
+        editing = true; fold(); openEditor?()
     }
     func save() {
         guard canSave else { return }
@@ -75,7 +117,11 @@ final class RepriseStore: ObservableObject {
         }
         var next = archive
         let heading = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        next.keep(ThreadNote(title: String((heading.isEmpty ? "Mon point de reprise" : heading).prefix(120)), intention: String(intention.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1200)), source: trimmedSource, createdAt: Date(), example: false))
+        var updated = editingNote ?? ThreadNote(title: "", intention: "", source: "", createdAt: Date(), example: false)
+        updated.title = String((heading.isEmpty ? "Mon point de reprise" : heading).prefix(120))
+        updated.intention = String(intention.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1200))
+        updated.source = trimmedSource; updated.example = false
+        next.keep(updated); selectedID = updated.id
         guard persist(next) else { return }
         editing = false; flash("Le fil est gardé."); fold()
     }
@@ -87,6 +133,9 @@ final class RepriseStore: ObservableObject {
     func undo() { var next = archive; next.undo(); if persist(next) { flash("Le fil précédent est revenu.") } }
     func resume() {
         guard let note else { return }
+        openSource(note)
+    }
+    func openSource(_ note: ThreadNote) {
         guard let url = note.url else {
             flash("Ton point de reprise est ici."); return
         }

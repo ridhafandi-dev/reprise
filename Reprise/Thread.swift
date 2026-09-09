@@ -1,6 +1,8 @@
 import Foundation
 
-struct ThreadNote: Codable, Equatable {
+struct ThreadNote: Codable, Equatable, Identifiable {
+    var identity: UUID? = UUID()
+    var id: String { identity?.uuidString ?? "\(createdAt.timeIntervalSince1970)-\(title)" }
     var title: String
     var intention: String
     var source: String
@@ -30,9 +32,18 @@ struct ThreadNote: Codable, Equatable {
 struct ThreadArchive: Codable {
     var current: ThreadNote?
     var previous: ThreadNote?
-    mutating func keep(_ note: ThreadNote) { previous = current; current = note }
-    mutating func release() { previous = current; current = nil }
-    mutating func undo() { swap(&current, &previous) }
+    var history: [ThreadNote]? = nil
+    var saved: [ThreadNote] {
+        var seen = Set<String>()
+        return ([current, previous].compactMap { $0 } + (history ?? []))
+            .filter { seen.insert($0.id).inserted }.sorted { $0.createdAt > $1.createdAt }
+    }
+    mutating func keep(_ note: ThreadNote) {
+        let all = saved.filter { $0.id != note.id }
+        previous = current; current = note; history = [note] + all
+    }
+    mutating func release() { history = saved; previous = current; current = nil }
+    mutating func undo() { history = saved; swap(&current, &previous) }
 }
 
 enum ThreadPersistence {
