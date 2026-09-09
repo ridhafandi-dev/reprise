@@ -1,4 +1,4 @@
-# Reprise 0.3.0 — Vérification
+# Reprise 0.3.1 — Vérification
 
 ## État V3 · 10 septembre 2026
 
@@ -14,7 +14,17 @@ Vérifié :
 - Archive illisible préservée lors d’une nouvelle capture.
 - Dans l’app installée V3 : trois fils antérieurs retrouvés, remise du fil Test au bord, présence des nouvelles actions Copier avec la source / Ajouter une note.
 
-En attente : installation de l’extension et enregistrement du pont dans Dia. L’approbation automatique a refusé la création du fichier NativeMessagingHosts sans accord utilisateur plus explicite. Aucun test réel de capture X/YouTube/article depuis Dia n’est donc revendiqué à ce stade. Le comportement des sites dynamiques, le raccourci Dia et le retour exact au passage restent à vérifier dans le navigateur réel.
+Validation réelle dans Dia, après accord explicite :
+- Extension 0.3.1 chargée et pont NativeMessagingHosts installé ; vérification du chemin de l’exécutable et de l’origine autorisée.
+- Activation depuis le menu Extensions > Reprise : post X « Experimenting with Blur & Gradients » enregistré avec auteur et URL exacte, intention vide ; accusé consommé et boîte de réception vide.
+- Présence du post et de son auteur dans l’interface Mes fils, sans formulaire de capture.
+- Copie avec source vérifiée en la collant dans un brouillon de l’app, ensuite annulé sans sauvegarde.
+- Conflit réel avec ⌘⇧S (affichage des onglets Dia). Remplacement par l’action native de l’extension `_execute_action` sur ⌃⇧R ; rechargement confirmé en 0.3.1 puis capture par ce raccourci vérifiée dans le fichier de l’app.
+- Reprise arrêtée : le menu de l’extension lance automatiquement l’app, sauvegarde une nouvelle capture du post et consomme l’accusé ; app observée en cours d’exécution ensuite.
+- Rendu final inspecté au bord : type POST X, titre, auteur, Revoir le post, copie, note facultative et Ranger visibles.
+- Deux captures du même post/extrait conservent le même fil. Correction de l’espace entre le nom et le @ de l’auteur.
+
+Limites restantes : YouTube et les text fragments d’article disposent de tests isolés ; leur parcours réel dans Dia n’a pas été validé dans cette session. Aucun parcours réel non testé n’est présenté comme démontré.
 
 La distribution reste expérimentale et non notarisée. Les détails d’installation et les limites de capture figurent dans BROWSER.md.
 

@@ -7,9 +7,11 @@ Reprise 0.3.0 ajoute une extension Chromium et un pont natif local. Aucun serveu
 1. Exécuter `bash Reprise/build.sh /chemin/de/sortie`.
 2. Exécuter `python3 Reprise/install-browser.py --app /chemin/de/sortie/Reprise.app --extension /chemin/du/repo/Reprise/Extension --browser dia`.
 3. Dans `chrome://extensions`, charger le dossier `Reprise/Extension` avec « Load unpacked » (mode développeur).
-4. Depuis une page web, cliquer sur Reprise dans les extensions ou utiliser **⌘⇧S**. Si le raccourci est déjà pris, le régler dans `chrome://extensions/shortcuts`.
+4. Depuis une page web, cliquer sur Reprise dans les extensions ou utiliser **⌃⇧R**. Si le raccourci est déjà pris, le régler dans `chrome://extensions/shortcuts`.
 
 Le pont est enregistré dans le dossier NativeMessagingHosts de Chrome, utilisé ici par le moteur d’extensions de Dia. Il cible le chemin exact de l’app : relancer l’installation après déplacement de celle-ci. L’identifiant stable de l’extension est `dkfcpfbnnjoginaefpfhpidocihpbine`.
+
+Dans Dia, le clic sur Reprise, le raccourci **Contrôle + Maj + R** et le lancement de l’app fermée ont été vérifiés avec un post X. ⌘⇧S est réservé à la disposition des onglets de Dia et n’est plus utilisé.
 
 ## Geste
 

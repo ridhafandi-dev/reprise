@@ -24,9 +24,3 @@ async function capture(tab) {
   } finally { capturing = false; }
 }
 chrome.action.onClicked.addListener(capture);
-chrome.commands.onCommand.addListener(async command => {
-  if (command === 'capture') {
-    const [tab] = await chrome.tabs.query({active: true, currentWindow: true});
-    await capture(tab);
-  }
-});

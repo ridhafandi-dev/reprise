@@ -22,7 +22,7 @@ function capturePage() {
       const path = `/${match[1]}/status/${match[2]}`;
       const post = Array.from(document.querySelectorAll('article[data-testid="tweet"]')).find(article => Array.from(article.querySelectorAll('a[href]')).some(a => a.getAttribute('href') === path && a.querySelector('time')));
       result.url = `${url.origin}${path}`;
-      result.author = clean(post?.querySelector('[data-testid="User-Name"]')?.textContent || '@' + match[1], 160);
+      result.author = clean(post?.querySelector('[data-testid="User-Name"]')?.textContent || '@' + match[1], 160).replace(/([^\s])@/g, '$1 @');
       result.excerpt = selection || clean(post?.querySelector('[data-testid="tweetText"]')?.textContent);
       if (result.excerpt) result.title = clean(result.excerpt, 160);
     }

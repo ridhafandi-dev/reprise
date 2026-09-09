@@ -6,9 +6,9 @@ Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, l
 
 ## Capture navigateur
 
-L’extension locale transmet titre, auteur, extrait sélectionné et position YouTube lorsqu’ils sont disponibles. Le raccourci proposé est **⌘⇧S**. Le pont Native Messaging confirme après sauvegarde dans l’app. Voir [le guide d’installation et les limites](Reprise/BROWSER.md).
+L’extension locale transmet titre, auteur, extrait sélectionné et position YouTube lorsqu’ils sont disponibles. Le raccourci proposé est **⌃⇧R**. Le pont Native Messaging confirme après sauvegarde dans l’app. Voir [le guide d’installation et les limites](Reprise/BROWSER.md).
 
-Le test de bout en bout dans Dia reste en attente de l’autorisation explicite d’installer le pont local ; la compilation et les tests isolés passent. Voir le journal de vérification.
+La capture d’un post X depuis Dia est vérifiée de bout en bout, par le menu de l’extension et par **Contrôle + Maj + R**. Le pont est installé après accord utilisateur. Voir le journal de vérification.
 
 ## Utiliser
 

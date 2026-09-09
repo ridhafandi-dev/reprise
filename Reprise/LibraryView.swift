@@ -49,7 +49,7 @@ struct LibraryView: View {
                 HStack { Image(systemName: "plus"); Text("Nouveau fil"); Spacer(); Text("⌘N").foregroundStyle(.secondary) }
                     .font(.system(size: 12, weight: .medium)).padding(12).background(.white.opacity(0.75), in: RoundedRectangle(cornerRadius: 10))
             }.buttonStyle(.plain).keyboardShortcut("n")
-            Text("Capturer une page · ⌘⇧S").font(.system(size: 11)).foregroundStyle(.secondary)
+            Text("Capturer une page · ⌃⇧R").font(.system(size: 11)).foregroundStyle(.secondary)
             Button("Coller un lien ou un extrait", action: store.paste).buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.secondary)
         }.padding(24).padding(.top, 16).background(Color.black.opacity(0.025))
     }

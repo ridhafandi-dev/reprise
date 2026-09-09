@@ -78,7 +78,7 @@ struct RepriseNotch: View {
             } else {
                 Spacer(minLength: 0)
                 Text("Une place pour\nla suite.").font(.system(size: 22, weight: .regular, design: .serif))
-                Text("Sur ta page, clique sur Reprise\nou utilise ⌘⇧S.").font(.system(size: 12)).foregroundStyle(Ink.muted)
+                Text("Sur ta page, clique sur Reprise\nou utilise ⌃⇧R.").font(.system(size: 12)).foregroundStyle(Ink.muted)
                 Spacer(minLength: 0)
                 Button("Coller une référence") { store.paste() }.buttonStyle(CompactAction())
             }
