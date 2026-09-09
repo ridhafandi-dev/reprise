@@ -40,6 +40,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var ticks: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if let icon = Bundle.main.image(forResource: "Reprise") { NSApp.applicationIconImage = icon }
         let main = NSMenu()
         let appMenu = NSMenu(); appMenu.addItem(withTitle: "Mes fils", action: #selector(showPresentation), keyEquivalent: "0")
         appMenu.addItem(.separator()); appMenu.addItem(withTitle: "Quitter Reprise", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -78,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         RunLoop.main.add(timer, forMode: .common); cursorTimer = timer
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        status.button?.image = NSImage(systemSymbolName: "bookmark", accessibilityDescription: "Reprise")
+        status.button?.image = RepriseBrand.menuIcon()
         let menu = NSMenu()
         menu.addItem(withTitle: "Retrouver mon fil", action: #selector(reveal), keyEquivalent: "")
         menu.addItem(withTitle: "Déposer un fil…", action: #selector(newThread), keyEquivalent: "")

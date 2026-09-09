@@ -11,12 +11,12 @@ async function capture(tab) {
     if (!payload) throw new Error('Cette page ne laisse pas lire son contexte.');
     const reply = await chrome.runtime.sendNativeMessage('tools.pulsar.reprise', payload);
     if (!reply?.ok) throw new Error(reply?.error || 'Reprise n’a pas confirmé la capture.');
-    await chrome.action.setBadgeBackgroundColor({color: '#87AA91'});
+    await chrome.action.setBadgeBackgroundColor({color: '#235CD6'});
     await chrome.action.setBadgeText({text: '✓'});
     await chrome.action.setTitle({title: 'Gardé au bord — Reprise'});
     setTimeout(() => chrome.action.setBadgeText({text: ''}), 2200);
   } catch (error) {
-    await chrome.action.setBadgeBackgroundColor({color: '#C27645'});
+    await chrome.action.setBadgeBackgroundColor({color: '#235CD6'});
     await chrome.action.setBadgeText({text: '!'});
     await chrome.action.setTitle({title: 'Reprise : ' + error.message});
     await chrome.storage.local.set({lastError: String(error.message)});

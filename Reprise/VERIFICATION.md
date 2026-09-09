@@ -1,3 +1,11 @@
+# Reprise 0.3.2 — Identité
+
+Nouveau R vectoriel, icône macOS ICNS et icônes Chromium 16/32/48/128. Palette #235CD6 / #89A7EA / blanc. Compilation et signature ad hoc réussies, app mise à jour et rendus Mes fils / encoche inspectés. Structure intérieure et comportements conservés. Six fils existants retrouvés.
+
+Extension : fichiers 0.3.2 préparés ; rechargement dans Dia non confirmé par l’outil UI (version affichée encore 0.3.1). Un clic Reload reste nécessaire. Détails dans Brand/README.md.
+
+---
+
 # Reprise 0.3.1 — Vérification
 
 ## État V3 · 10 septembre 2026

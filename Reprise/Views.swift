@@ -3,10 +3,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum Ink {
-    static let amber = Color(red: 0.94, green: 0.69, blue: 0.43)
+    static let blue = Color(red: 35.0/255, green: 92.0/255, blue: 214.0/255)
+    static let sky = Color(red: 137.0/255, green: 167.0/255, blue: 234.0/255)
     static let black = Color(red: 0.035, green: 0.037, blue: 0.04)
     static let muted = Color(white: 0.61)
-    static let paper = Color(red: 0.94, green: 0.93, blue: 0.90)
+    static let paper = Color.white
 }
 
 struct QuietButton: ButtonStyle {
@@ -15,8 +16,8 @@ struct QuietButton: ButtonStyle {
         configuration.label.font(.system(size: 13, weight: .medium))
             .padding(.horizontal, 16).padding(.vertical, 12)
             .frame(maxWidth: primary ? .infinity : nil)
-            .foregroundStyle(primary ? Ink.black : Color.white.opacity(0.8))
-            .background(primary ? Ink.amber : Color.white.opacity(configuration.isPressed ? 0.13 : 0.06), in: RoundedRectangle(cornerRadius: 12))
+            .foregroundStyle(primary ? Color.white : Color.white.opacity(0.8))
+            .background(primary ? Ink.blue : Color.white.opacity(configuration.isPressed ? 0.13 : 0.06), in: RoundedRectangle(cornerRadius: 12))
             .opacity(configuration.isPressed ? 0.72 : 1)
     }
 }
@@ -28,7 +29,7 @@ struct EditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Label("REPRISE", systemImage: "bookmark.fill").tracking(2).foregroundStyle(Ink.amber)
+                HStack(spacing: 8) { RepriseMark(color: Ink.sky).frame(width: 13, height: 13); Text("REPRISE").tracking(2) }.foregroundStyle(Ink.sky)
                 Spacer()
                 Text("UNE SEULE PLACE").foregroundStyle(Ink.muted).tracking(1.5)
             }.font(.system(size: 10, weight: .medium))

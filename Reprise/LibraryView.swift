@@ -11,7 +11,7 @@ struct LibraryView: View {
     }
     var sidebar: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("REPRISE", systemImage: "bookmark.fill").font(.system(size: 11, weight: .semibold)).tracking(2)
+            Label { Text("REPRISE") } icon: { RepriseMark(color: Ink.blue).frame(width: 13, height: 13) }.font(.system(size: 11, weight: .semibold)).tracking(2)
             HStack(alignment: .firstTextBaseline) {
                 Text("Mes fils").font(.system(size: 26, weight: .regular, design: .serif))
                 Spacer()
@@ -26,8 +26,11 @@ struct LibraryView: View {
                     ForEach(store.visibleNotes) { note in
                         Button { store.selectedID = note.id } label: {
                             HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: note.id == store.note?.id ? "bookmark.fill" : "text.alignleft")
-                                    .font(.system(size: 11)).foregroundStyle(note.id == store.note?.id ? Color.brown : Color.secondary)
+                                Group {
+                                    if note.id == store.note?.id { RepriseMark(color: Ink.blue).frame(width: 11, height: 11) }
+                                    else { Image(systemName: "text.alignleft") }
+                                }
+                                    .font(.system(size: 11)).foregroundStyle(note.id == store.note?.id ? Ink.blue : Color.secondary)
                                     .frame(width: 14).padding(.top, 3)
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(note.title).font(.system(size: 13, weight: .medium)).lineLimit(2)
@@ -51,13 +54,13 @@ struct LibraryView: View {
             }.buttonStyle(.plain).keyboardShortcut("n")
             Text("Capturer une page · ⌃⇧R").font(.system(size: 11)).foregroundStyle(.secondary)
             Button("Coller un lien ou un extrait", action: store.paste).buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(.secondary)
-        }.padding(24).padding(.top, 16).background(Color.black.opacity(0.025))
+        }.padding(24).padding(.top, 16).background(Ink.sky.opacity(0.09))
     }
     @ViewBuilder var detail: some View {
         if let note = store.selected {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
-                    Label(note.id == store.note?.id ? "AU BORD DE L’ÉCRAN" : "GARDÉ DE CÔTÉ", systemImage: note.id == store.note?.id ? "bookmark.fill" : "tray")
+                    Label(note.id == store.note?.id ? "AU BORD DE L’ÉCRAN" : "GARDÉ DE CÔTÉ", systemImage: note.id == store.note?.id ? "circle.inset.filled" : "tray")
                         .font(.system(size: 10, weight: .medium)).tracking(1).foregroundStyle(.secondary)
                     Spacer()
                     Menu {
@@ -104,7 +107,7 @@ struct LibraryView: View {
             }.padding(40).frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 20) {
-                Image(systemName: "bookmark").font(.system(size: 28, weight: .ultraLight))
+                RepriseMark(color: Ink.blue, tail: Ink.sky).frame(width: 30, height: 30)
                 Text("Garde l’endroit\noù reprendre.").font(.system(size: 30, weight: .regular, design: .serif))
                 Text("Une phrase pour la suite, avec un lien ou un fichier si tu en as besoin. Les fils rangés restent disponibles ici.")
                     .font(.system(size: 14)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)

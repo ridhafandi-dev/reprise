@@ -22,9 +22,8 @@ struct RepriseNotch: View {
                     .transition(.opacity.combined(with: .offset(x: store.side == .right ? 8 : -8)))
             } else {
                 Button { store.reveal() } label: {
-                    Image(systemName: store.note == nil ? "plus" : "bookmark.fill")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(store.note == nil ? Ink.muted : Ink.amber)
+                    RepriseMark(color: store.note == nil ? Ink.muted : Ink.sky)
+                        .frame(width: 13, height: 13)
                         .frame(width: 22, height: 76)
                 }.buttonStyle(.plain).accessibilityLabel("Ouvrir le fil")
             }
@@ -39,7 +38,7 @@ struct RepriseNotch: View {
     var content: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("REPRISE", systemImage: "bookmark.fill").font(.system(size: 9, weight: .semibold)).tracking(1.5).foregroundStyle(Ink.amber)
+                HStack(spacing: 7) { RepriseMark(color: Ink.sky).frame(width: 12, height: 12); Text("REPRISE").tracking(1.5) }.font(.system(size: 9, weight: .semibold)).foregroundStyle(Ink.sky)
                 Spacer()
                 Button { store.showWelcome?() } label: { Image(systemName: "tray").font(.system(size: 12)) }
                     .help("Ouvrir Mes fils").accessibilityLabel("Ouvrir Mes fils")
@@ -109,7 +108,7 @@ struct CompactAction: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.font(.system(size: 12, weight: .medium))
             .padding(.horizontal, 14).padding(.vertical, 9)
-            .foregroundStyle(Ink.black)
-            .background(Ink.amber.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 9))
+            .foregroundStyle(Color.white)
+            .background(Ink.blue.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 9))
     }
 }

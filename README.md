@@ -1,8 +1,12 @@
-# Reprise 0.3 — Garder au bord
+# Reprise 0.3.2 — Garder au bord
 
 Un petit signet au bord du Mac pour garder une référence pendant qu’on s’en sert. Capture en un geste depuis le navigateur, note facultative et retour à la source. À l’intérieur, les fils mis de côté restent accessibles.
 
 Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, le principe du panneau non activant et le suivi du pointeur servent de base. Les sources originales sont conservées ; la cible Reprise ne compile aucun provider IA ni updater.
+
+## Identité
+
+R ouvert, bleu #235CD6, bleu clair #89A7EA et blanc. Icônes app et extension disponibles dans [Brand](Reprise/Brand/README.md).
 
 ## Capture navigateur
 
