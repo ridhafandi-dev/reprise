@@ -24,6 +24,7 @@ struct QuietButton: ButtonStyle {
 struct RepriseNotch: View {
     @ObservedObject var store: RepriseStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var pointerInside = false
     var body: some View {
         let shape = SideNotchShape(edge: store.side)
         ZStack {
@@ -42,18 +43,20 @@ struct RepriseNotch: View {
                 .foregroundStyle(store.note == nil ? Ink.muted : Ink.amber)
                 .padding(store.side == .right ? .trailing : .leading, 4)
                 .frame(width: 40, height: 132) }.buttonStyle(.plain)
-                .accessibilityElement(children: .ignore)
                 .accessibilityLabel(store.note == nil ? "Reprise, déposer un fil" : "Reprise, un fil gardé")
-                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { store.reveal() }
             }
         }
         .frame(width: store.isOpen ? 382 : 40, height: store.isOpen ? 448 : 132)
         .contentShape(shape)
-        .onHover { store.hover($0) }
+        .onHover { inside in
+            guard inside != pointerInside else { return }
+            pointerInside = inside
+            store.hover(inside)
+        }
         .onDrop(of: [UTType.fileURL.identifier, UTType.url.identifier, UTType.utf8PlainText.identifier], isTargeted: $store.targeted, perform: acceptDrop)
         .animation(NotchMotion.respectingReduceMotion(NotchMotion.unfold, reduceMotion), value: store.isOpen)
         .animation(NotchMotion.crossfade, value: store.note)
-        .frame(width: 430, height: 488, alignment: store.side == .right ? .trailing : .leading)
         .preferredColorScheme(.dark)
     }
 
@@ -212,18 +215,14 @@ struct WelcomeView: View {
             }.padding(32).frame(width: 440)
             ZStack(alignment: .trailing) {
                 Color(red: 0.82, green: 0.81, blue: 0.77)
-                VStack(alignment: .leading, spacing: 16) {
+                if !store.isOpen { VStack(alignment: .leading, spacing: 16) {
                     Text("LE FIL T’ATTEND.").font(.system(size: 9, weight: .medium)).tracking(2).foregroundStyle(.black.opacity(0.4))
                     Text("Rien à rattraper.\nJuste un endroit\noù revenir.").font(.system(size: 25, weight: .regular, design: .serif)).foregroundStyle(.black.opacity(0.58))
                     Text("Survole le signet →").font(.system(size: 11)).foregroundStyle(.black.opacity(0.45))
-                }.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 32).padding(.trailing, 48)
-                SideNotchShape(edge: .right).fill(Ink.black).frame(width: 40, height: 132)
-                    .overlay(alignment: .trailing) {
-                        Image(systemName: "bookmark.fill").font(.system(size: 15)).foregroundStyle(Ink.amber).padding(.trailing, 12)
-                    }.onHover { if $0 { reveal() } }.onTapGesture(perform: reveal)
-                    .accessibilityLabel("Essayer Reprise").accessibilityAddTraits(.isButton)
-            }.frame(width: 292)
-        }.frame(width: 732, height: 532).background(Ink.paper).preferredColorScheme(.light)
+                }.frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 32).padding(.trailing, 48) }
+                RepriseNotch(store: store)
+            }.frame(width: 430)
+        }.frame(width: 870, height: 532).background(Ink.paper).preferredColorScheme(.light)
     }
     func step(_ number: String, _ text: String) -> some View {
         HStack(spacing: 12) {

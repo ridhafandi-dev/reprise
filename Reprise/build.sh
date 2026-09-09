@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 REPRISE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-REPRISE_OUT="${1:-$REPRISE_ROOT/build/reprise}"
+REPRISE_DEST="${1:-$REPRISE_ROOT/build/reprise}"
+REPRISE_OUT="$(mktemp -d "${TMPDIR:-/tmp}/reprise-build.XXXXXX")"
+trap 'rm -rf "$REPRISE_OUT"' EXIT
 REPRISE_CACHE="${TMPDIR:-/tmp}/reprise-swift-module-cache"
 mkdir -p "$REPRISE_OUT/Reprise.app/Contents/MacOS" "$REPRISE_OUT/Reprise.app/Contents/Resources" "$REPRISE_CACHE"
 swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
@@ -31,4 +33,8 @@ PLIST
 # only that metadata before signing our own build; no quarantine is changed.
 xattr -rd com.apple.FinderInfo "$REPRISE_OUT/Reprise.app" 2>/dev/null || true
 codesign --force --sign - "$REPRISE_OUT/Reprise.app"
-printf 'Built: %s\n' "$REPRISE_OUT/Reprise.app"
+codesign --verify --deep --strict "$REPRISE_OUT/Reprise.app"
+mkdir -p "$REPRISE_DEST"
+ditto --norsrc --noextattr "$REPRISE_OUT/Reprise.app" "$REPRISE_DEST/Reprise.app"
+ditto --norsrc --noextattr -c -k --keepParent "$REPRISE_OUT/Reprise.app" "$REPRISE_DEST/Reprise-macOS.zip"
+printf 'Built: %s\n' "$REPRISE_DEST/Reprise.app"

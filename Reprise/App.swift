@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.mainMenu = main
 
         panel = ReprisePanel(); panel.title = "Reprise — Le fil"
-        let host = RepriseHost(rootView: RepriseNotch(store: store)); host.store = store
+        let host = NSHostingView(rootView: RepriseNotch(store: store))
         panel.contentView = host
         store.openEditor = { [weak self] in self?.showEditor() }
         store.showWelcome = { [weak self] in self?.showPresentation() }
@@ -60,18 +60,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.placePanel() }
         }
-        // SwiftUI's transparent hosting area must not block the desktop. This
-        // timer only samples pointer location; it reads no app content or keys.
-        ticks = Timer.publish(every: 0.12, on: .main, in: .common).autoconnect().sink { [weak self] _ in
-            guard let self else { return }
-            let point = NSEvent.mouseLocation
-            let w: CGFloat = self.store.isOpen ? 382 : 40
-            let h: CGFloat = self.store.isOpen ? 448 : 132
-            let f = self.panel.frame
-            let visible = CGRect(x: self.store.side == .right ? f.maxX - w : f.minX, y: f.midY - h / 2, width: w, height: h)
-            let inside = visible.contains(point)
-            self.panel.ignoresMouseEvents = !inside && !self.store.targeted
-            if inside && !self.store.expanded { self.store.hover(true) }
+        // Size the native window to the visible notch. A large invisible
+        // window with ignoresMouseEvents toggled by polling can swallow AX
+        // presses and incoming drags; the compact window needs no such timer.
+        ticks = store.objectWillChange.sink { [weak self] _ in
+            DispatchQueue.main.async { self?.placePanel() }
         }
         status = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         status.button?.image = NSImage(systemSymbolName: "bookmark", accessibilityDescription: "Reprise")
@@ -91,7 +84,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func placePanel() {
         guard let screen = NSScreen.screens.first else { return }
         let frame = screen.frame
-        panel.setFrameOrigin(NSPoint(x: store.side == .right ? frame.maxX - 430 : frame.minX, y: frame.midY - 244 - min(80, frame.height * 0.08)))
+        let width: CGFloat = store.isOpen ? 382 : 40
+        let height: CGFloat = store.isOpen ? 448 : 132
+        let target = NSRect(x: store.side == .right ? frame.maxX - width : frame.minX,
+                            y: frame.midY - height / 2 - min(80, frame.height * 0.08),
+                            width: width, height: height)
+        panel.setFrame(target, display: true)
     }
     @objc func reveal() {
         welcome?.orderOut(nil); store.reveal(); panel.orderFrontRegardless()
@@ -101,7 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func changeSide() { store.side = store.side == .right ? .left : .right; placePanel() }
     @objc func showPresentation() {
         if welcome == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 732, height: 532), styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
+            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 870, height: 532), styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
             window.title = "Reprise — Étude 01"; window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
             window.isReleasedWhenClosed = false; window.backgroundColor = NSColor(Ink.paper)
             window.contentView = NSHostingView(rootView: WelcomeView(store: store) { [weak self] in self?.reveal() })
