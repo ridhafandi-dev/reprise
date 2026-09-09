@@ -37,7 +37,7 @@ struct RepriseNotch: View {
         .preferredColorScheme(.dark)
     }
     var content: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Label("REPRISE", systemImage: "bookmark.fill").font(.system(size: 9, weight: .semibold)).tracking(1.5).foregroundStyle(Ink.amber)
                 Spacer()
@@ -49,43 +49,49 @@ struct RepriseNotch: View {
             if store.targeted {
                 Spacer(minLength: 0)
                 Label("Dépose ici", systemImage: "arrow.down.to.line").font(.system(size: 21, weight: .regular, design: .serif))
-                Text("Ajoute ensuite où reprendre.").font(.system(size: 12)).foregroundStyle(Ink.muted)
+                Text("La référence sera gardée aussitôt.").font(.system(size: 12)).foregroundStyle(Ink.muted)
                 Spacer(minLength: 0)
             } else if let note = store.note {
-                Text(note.intention).font(.system(size: 17, weight: .regular, design: .serif))
-                    .lineSpacing(2).lineLimit(4).frame(maxWidth: .infinity, minHeight: 72, alignment: .topLeading)
-                Button { store.openSource(note) } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: note.url?.isFileURL == true ? "doc" : "link").foregroundStyle(Ink.amber)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(note.title).font(.system(size: 11, weight: .medium)).lineLimit(1)
-                            Text(note.sourceLabel).font(.system(size: 10)).foregroundStyle(Ink.muted).lineLimit(1)
-                        }; Spacer(minLength: 0)
-                    }.padding(10).background(.white.opacity(0.045), in: RoundedRectangle(cornerRadius: 8))
-                }.buttonStyle(.plain)
-                HStack {
-                    Button { store.resume() } label: { Label("Reprendre", systemImage: "arrow.up.right") }
-                        .buttonStyle(CompactAction())
+                HStack(spacing: 6) {
+                    Image(systemName: note.symbol)
+                    Text(note.kindLabel)
+                    if let time = note.timeLabel { Text("· " + time).monospacedDigit() }
                     Spacer()
-                    Button("Modifier") { store.edit(existing: true) }.buttonStyle(.plain).foregroundStyle(Ink.muted)
-                }.font(.system(size: 11))
+                }.font(.system(size: 9, weight: .medium)).tracking(0.8).foregroundStyle(Ink.muted)
+                Text(note.title).font(.system(size: 17, weight: .regular, design: .serif))
+                    .lineSpacing(1).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                if note.preview != note.title {
+                    Text(note.preview).font(.system(size: 12)).foregroundStyle(Ink.paper.opacity(0.78))
+                        .lineSpacing(2).lineLimit(3).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Text([note.context?.author, note.sourceLabel].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.system(size: 10)).foregroundStyle(Ink.muted).lineLimit(1)
+                Spacer(minLength: 0)
+                HStack(spacing: 12) {
+                    Button { store.resume() } label: { Text(note.actionLabel) }.buttonStyle(CompactAction())
+                    Spacer(minLength: 0)
+                    Button { store.copyIntention(note) } label: { Image(systemName: "doc.on.doc") }
+                        .buttonStyle(.plain).help("Copier avec la source").accessibilityLabel("Copier avec la source")
+                    Button { store.edit(existing: true) } label: { Image(systemName: "square.and.pencil") }
+                        .buttonStyle(.plain).help("Ajouter une note").accessibilityLabel("Ajouter une note")
+                }.font(.system(size: 12)).foregroundStyle(Ink.muted)
             } else {
                 Spacer(minLength: 0)
                 Text("Une place pour\nla suite.").font(.system(size: 22, weight: .regular, design: .serif))
-                Text("Un lien, un fichier, une phrase.").font(.system(size: 12)).foregroundStyle(Ink.muted)
+                Text("Sur ta page, clique sur Reprise\nou utilise ⌘⇧S.").font(.system(size: 12)).foregroundStyle(Ink.muted)
                 Spacer(minLength: 0)
-                Button("Déposer un fil") { store.edit() }.buttonStyle(CompactAction())
+                Button("Coller une référence") { store.paste() }.buttonStyle(CompactAction())
             }
             if !store.error.isEmpty {
                 Text(store.error).font(.system(size: 10)).foregroundStyle(.orange).lineLimit(2)
             } else {
                 HStack {
-                    Text(store.notice.isEmpty ? "À ton rythme." : store.notice).lineLimit(1)
+                    Text(store.notice.isEmpty ? "À portée de main." : store.notice).lineLimit(1)
                     Spacer(minLength: 4)
                     if store.note != nil { Button("Ranger", action: store.release).buttonStyle(.plain) }
                 }.font(.system(size: 10)).foregroundStyle(Ink.muted)
             }
-        }.padding(.vertical, 22).padding(.horizontal, 20).foregroundStyle(Ink.paper)
+        }.padding(.vertical, 18).padding(.horizontal, 20).foregroundStyle(Ink.paper)
     }
     private func acceptDrop(_ providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
@@ -93,7 +99,7 @@ struct RepriseNotch: View {
         guard let type = types.first(where: provider.hasItemConformingToTypeIdentifier) else { return false }
         provider.loadItem(forTypeIdentifier: type, options: nil) { item, _ in
             let value = (item as? URL)?.absoluteString ?? (item as? String) ?? (item as? Data).flatMap { String(data: $0, encoding: .utf8) }
-            if let value { Task { @MainActor in store.edit(dropped: value.trimmingCharacters(in: .controlCharacters)) } }
+            if let value { Task { @MainActor in store.captureText(value.trimmingCharacters(in: .controlCharacters)) } }
         }
         return true
     }

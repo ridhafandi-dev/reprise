@@ -8,12 +8,17 @@ REPRISE_CACHE="${TMPDIR:-/tmp}/reprise-swift-module-cache"
 mkdir -p "$REPRISE_OUT/Reprise.app/Contents/MacOS" "$REPRISE_OUT/Reprise.app/Contents/Resources" "$REPRISE_CACHE"
 swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
   "$REPRISE_ROOT/Reprise/App.swift" "$REPRISE_ROOT/Reprise/Thread.swift" \
-  "$REPRISE_ROOT/Reprise/Store.swift" "$REPRISE_ROOT/Reprise/Views.swift" \
+  "$REPRISE_ROOT/Reprise/Capture.swift" "$REPRISE_ROOT/Reprise/Store.swift" "$REPRISE_ROOT/Reprise/Views.swift" \
   "$REPRISE_ROOT/Reprise/NotchSupport.swift" \
   "$REPRISE_ROOT/Reprise/CompactNotch.swift" "$REPRISE_ROOT/Reprise/LibraryView.swift" \
   "$REPRISE_ROOT/Sources/Notch/SideNotchShape.swift" \
   "$REPRISE_ROOT/Sources/Notch/NotchMotion.swift" \
   -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/Reprise"
+swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
+  "$REPRISE_ROOT/Reprise/NativeHost.swift" "$REPRISE_ROOT/Reprise/Capture.swift" \
+  "$REPRISE_ROOT/Reprise/Thread.swift" "$REPRISE_ROOT/Reprise/BridgeIdentity.swift" \
+  -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseBridge"
+codesign --force --sign - "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseBridge"
 cp "$REPRISE_ROOT/LICENSE" "$REPRISE_OUT/Reprise.app/Contents/Resources/LICENSE"
 cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -23,8 +28,8 @@ cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleIdentifier</key><string>tools.pulsar.reprise.study</string>
 <key>CFBundleName</key><string>Reprise</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.2.0</string>
-<key>CFBundleVersion</key><string>2</string>
+<key>CFBundleShortVersionString</key><string>0.3.0</string>
+<key>CFBundleVersion</key><string>3</string>
 <key>LSMinimumSystemVersion</key><string>15.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSHumanReadableCopyright</key><string>Reprise 2026. Based on Codenotch © 2026 Vinz, MIT.</string>

@@ -35,6 +35,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var monitors: [Any] = []
     var cursorTimer: Timer?
     var screenObserver: Any?
+    var captureObserver: NSObjectProtocol?
+    var captureTimer: Timer?
     var ticks: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -88,6 +90,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         menu.addItem(withTitle: "Quitter Reprise", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         for item in menu.items where item.action != #selector(NSApplication.terminate(_:)) { item.target = self }
         status.menu = menu
+        captureObserver = DistributedNotificationCenter.default().addObserver(forName: NSNotification.Name(CaptureInbox.notification), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.store.drainCaptures() }
+        }
+        captureTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.store.drainCaptures() }
+        }
+        store.drainCaptures()
         if !CommandLine.arguments.contains("--quiet") { showPresentation() }
     }
     func placePanel() {

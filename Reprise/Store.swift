@@ -27,6 +27,7 @@ final class RepriseStore: ObservableObject {
     private var openWork: DispatchWorkItem?
     private var hoverInside = false
     private var editingNote: ThreadNote?
+    private var storageReadable = true
     private let storage: URL
 
     init(storageURL: URL? = nil) {
@@ -38,16 +39,16 @@ final class RepriseStore: ObservableObject {
                 .appendingPathComponent("Reprise/thread.json")
         }
         do { archive = try ThreadPersistence.load(from: storage) }
-        catch { self.error = "Le fil enregistré ne peut pas être lu. Le fichier est conservé." }
+        catch { storageReadable = false; self.error = "Le fil enregistré ne peut pas être lu. Le fichier est conservé." }
         side = UserDefaults.standard.string(forKey: "reprise.edge") == "left" ? .left : .right
     }
     var note: ThreadNote? { archive.current }
     var isOpen: Bool { expanded || targeted }
-    var canSave: Bool { !intention.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    var canSave: Bool { !intention.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || ThreadNote.sourceURL(source) != nil }
     var visibleNotes: [ThreadNote] {
         archive.saved.filter { note in
             (!onlyParked || note.id != archive.current?.id) &&
-            (query.isEmpty || [note.title, note.intention, note.source].joined(separator: " ").localizedStandardContains(query))
+            (query.isEmpty || [note.title, note.intention, note.source, note.context?.excerpt ?? "", note.context?.author ?? ""].joined(separator: " ").localizedStandardContains(query))
         }
     }
     var selected: ThreadNote? {
@@ -60,8 +61,8 @@ final class RepriseStore: ObservableObject {
         if persist(next) { selectedID = note.id; flash("Ce fil est au bord.") }
     }
     func copyIntention(_ note: ThreadNote) {
-        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(note.intention, forType: .string)
-        flash("Phrase copiée.")
+        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(note.citation, forType: .string)
+        flash("Extrait et source copiés.")
     }
     func reveal() {
         closeWork?.cancel(); closeWork = nil; openWork?.cancel(); openWork = nil
@@ -118,14 +119,16 @@ final class RepriseStore: ObservableObject {
         var next = archive
         let heading = title.trimmingCharacters(in: .whitespacesAndNewlines)
         var updated = editingNote ?? ThreadNote(title: "", intention: "", source: "", createdAt: Date(), example: false)
-        updated.title = String((heading.isEmpty ? "Mon point de reprise" : heading).prefix(120))
+        updated.title = String((heading.isEmpty ? (ThreadNote.sourceURL(trimmedSource)?.host ?? "Mon point de reprise") : heading).prefix(120))
         updated.intention = String(intention.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1200))
+        if updated.source != trimmedSource { updated.context = nil }
         updated.source = trimmedSource; updated.example = false
         next.keep(updated); selectedID = updated.id
         guard persist(next) else { return }
         editing = false; flash("Le fil est gardé."); fold()
     }
     @discardableResult private func persist(_ next: ThreadArchive) -> Bool {
+        guard storageReadable else { error = "Le fichier existant ne peut pas être lu. Capture non enregistrée pour le préserver."; return false }
         do { try ThreadPersistence.save(next, to: storage); archive = next; error = ""; return true }
         catch { self.error = "Enregistrement impossible. Ton texte reste ouvert."; return false }
     }
@@ -136,7 +139,7 @@ final class RepriseStore: ObservableObject {
         openSource(note)
     }
     func openSource(_ note: ThreadNote) {
-        guard let url = note.url else {
+        guard let url = note.resumeURL else {
             flash("Ton point de reprise est ici."); return
         }
         if url.isFileURL && !FileManager.default.fileExists(atPath: url.path) {
@@ -145,11 +148,56 @@ final class RepriseStore: ObservableObject {
         guard NSWorkspace.shared.open(url) else { error = "Cette source n’a pas pu être ouverte."; return }
         fold()
     }
+    // Used by paste/drop. Browser capture provides richer metadata through receive().
+    func captureText(_ text: String) {
+        let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return }
+        let url = ThreadNote.sourceURL(value)
+        let note = ThreadNote(title: url.map { $0.isFileURL ? $0.lastPathComponent : ($0.host ?? "Référence") } ?? String(value.prefix(100)), intention: url == nil ? String(value.prefix(2000)) : "", source: url?.absoluteString ?? "", createdAt: Date(), example: false)
+        var next = archive; next.keep(note)
+        if persist(next) { selectedID = note.id; flash("Gardé au bord."); reveal() }
+    }
+    @discardableResult func receive(_ payload: PageCapture) -> Bool {
+        do {
+            let capture = try payload.validated()
+            var note = archive.saved.first { $0.source == capture.url && $0.context?.excerpt == capture.excerpt }
+                ?? ThreadNote(title: capture.title, intention: "", source: capture.url, createdAt: Date(), example: false)
+            note.title = capture.title; note.context = capture; note.createdAt = Date(); note.example = false
+            var next = archive; next.keep(note)
+            guard persist(next) else { return false }
+            selectedID = note.id; flash("Gardé au bord."); reveal(); return true
+        } catch { self.error = error.localizedDescription; return false }
+    }
+    func drainCaptures(in directory: URL = CaptureInbox.directory) {
+        guard let files = try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
+        for file in files.filter({ $0.pathExtension == "json" }).sorted(by: {
+            let first = (try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            let second = (try? $1.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+            return first < second
+        }) {
+            guard UUID(uuidString: file.deletingPathExtension().lastPathComponent) != nil else { continue }
+            do {
+                let data = try Data(contentsOf: file)
+                guard data.count <= 65536 else { throw CaptureError.invalid }
+                let capture = try JSONDecoder().decode(PageCapture.self, from: data).validated()
+                guard capture.id == file.deletingPathExtension().lastPathComponent else { throw CaptureError.invalid }
+                let ok = receive(capture)
+                let ack = CaptureReceipt(ok: ok, error: ok ? nil : error)
+                try JSONEncoder().encode(ack).write(to: file.deletingPathExtension().appendingPathExtension("ack"), options: .atomic)
+                try FileManager.default.removeItem(at: file)
+            } catch {
+                let ack = CaptureReceipt(ok: false, error: error.localizedDescription)
+                try? JSONEncoder().encode(ack).write(to: file.deletingPathExtension().appendingPathExtension("ack"), options: .atomic)
+                // Preserve rejected data, without repeatedly attempting it.
+                try? FileManager.default.moveItem(at: file, to: file.appendingPathExtension("rejected"))
+            }
+        }
+    }
     func paste() {
         let board = NSPasteboard.general
         if let files = board.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], let file = files.first {
-            edit(dropped: file.absoluteString)
-        } else if let text = board.string(forType: .string), !text.isEmpty { edit(dropped: text) }
+            captureText(file.absoluteString)
+        } else if let text = board.string(forType: .string), !text.isEmpty { captureText(text) }
         else { error = "Copie d’abord un lien, un fichier ou un extrait." }
     }
 }

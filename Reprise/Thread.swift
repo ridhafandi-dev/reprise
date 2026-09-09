@@ -8,10 +8,36 @@ struct ThreadNote: Codable, Equatable, Identifiable {
     var source: String
     var createdAt: Date
     var example: Bool
+    var context: PageCapture? = nil
 
     static let example = ThreadNote(title: "Un geste à garder", intention: "Reprendre ici : le mouvement du volet, avant de penser aux fonctionnalités.", source: "https://github.com/vinzdg/codenotch", createdAt: Date(), example: true)
 
     var url: URL? { Self.sourceURL(source) }
+    var resumeURL: URL? {
+        guard let url else { return nil }
+        guard let seconds = context?.seconds, var parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
+        parts.queryItems = (parts.queryItems ?? []).filter { !["t", "start"].contains($0.name) } + [URLQueryItem(name: "t", value: String(Int(seconds)))]
+        return parts.url ?? url
+    }
+    var timeLabel: String? {
+        guard let seconds = context?.seconds else { return nil }
+        let n = Int(seconds)
+        return n >= 3600 ? String(format: "%d:%02d:%02d", n/3600, n/60%60, n%60) : String(format: "%d:%02d", n/60, n%60)
+    }
+    var kindLabel: String { context?.kind == "video" ? "VIDÉO" : context?.kind == "post" ? "POST X" : context == nil ? "FIL" : "PAGE" }
+    var symbol: String { context?.kind == "video" ? "play.rectangle" : context?.kind == "post" ? "quote.bubble" : url?.isFileURL == true ? "doc" : "text.alignleft" }
+    var preview: String {
+        if !intention.isEmpty { return intention }
+        if let excerpt = context?.excerpt, !excerpt.isEmpty { return excerpt }
+        if let description = context?.description, !description.isEmpty { return description }
+        return title
+    }
+    var actionLabel: String { timeLabel.map { "Reprendre à \($0)" } ?? (context?.kind == "post" ? "Revoir le post" : "Ouvrir la source") }
+    var citation: String {
+        let text = (context?.excerpt?.isEmpty == false ? context?.excerpt : nil) ?? (!intention.isEmpty ? intention : title)
+        let attribution = [title, context?.author].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " — ")
+        return [text == attribution ? nil : text, attribution, resumeURL?.absoluteString].compactMap { $0 }.joined(separator: "\n\n")
+    }
     static func sourceURL(_ text: String) -> URL? {
         let value = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if value.hasPrefix("/") { return URL(fileURLWithPath: value) }

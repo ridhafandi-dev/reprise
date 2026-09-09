@@ -32,10 +32,10 @@ struct EditorView: View {
                 Spacer()
                 Text("UNE SEULE PLACE").foregroundStyle(Ink.muted).tracking(1.5)
             }.font(.system(size: 10, weight: .medium))
-            Text("Où reprendre ?").font(.system(size: 30, weight: .regular, design: .serif)).foregroundStyle(Ink.paper)
-            Text("Laisse une phrase à ton toi de tout à l’heure.").foregroundStyle(Ink.muted).font(.system(size: 13))
+            Text("Un mot pour la suite ?").font(.system(size: 30, weight: .regular, design: .serif)).foregroundStyle(Ink.paper)
+            Text("Ta référence suffit. Ajoute une note si elle t’aide.").foregroundStyle(Ink.muted).font(.system(size: 13))
             VStack(alignment: .leading, spacing: 8) {
-                Text("LE POINT DE REPRISE").font(.system(size: 10)).tracking(1.2).foregroundStyle(Ink.muted)
+                Text("TA NOTE · FACULTATIVE").font(.system(size: 10)).tracking(1.2).foregroundStyle(Ink.muted)
                 TextEditor(text: $store.intention).font(.system(size: 17)).scrollContentBackground(.hidden)
                     .padding(12).frame(height: 108).background(.white.opacity(0.055), in: RoundedRectangle(cornerRadius: 12))
                     .focused($focus).accessibilityLabel("Le point de reprise")

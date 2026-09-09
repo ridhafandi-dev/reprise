@@ -1,4 +1,26 @@
-# Reprise 0.2.0 — Vérification
+# Reprise 0.3.0 — Vérification
+
+## État V3 · 10 septembre 2026
+
+Implémenté : capture navigateur par extension Chromium et pont Native Messaging local, capture directe au collage/dépôt, contexte optionnel rétrocompatible, note personnelle facultative, auteur/extrait et retour YouTube avec timestamp, copie avec source. Le volet garde ses dimensions de 288 × 280 points.
+
+Vérifié :
+- Compilation native Apple Silicon et signature ad hoc du paquet V3.
+- Tests modèle et survol V2 conservés.
+- Capture sans éditeur ; conservation du contexte après édition et relancement du modèle ; déduplication d’une même source/extrait ; mise à jour du timestamp ; URL de retour à 12:43 puis 13:20 ; copie de citation.
+- Tests isolés de l’extracteur JavaScript : métadonnées article, sélection et text fragment, lecteur YouTube, repli sans lecteur, post X exact, repli sur un flux, rejet des pages internes.
+- Tests de protocole natif : framing longueur/JSON, origine non admise, taille excessive et message invalide rejetés.
+- Test de la boîte de réception isolée : accusé positif après sauvegarde, retrait du message traité, données retrouvées dans l’archive.
+- Archive illisible préservée lors d’une nouvelle capture.
+- Dans l’app installée V3 : trois fils antérieurs retrouvés, remise du fil Test au bord, présence des nouvelles actions Copier avec la source / Ajouter une note.
+
+En attente : installation de l’extension et enregistrement du pont dans Dia. L’approbation automatique a refusé la création du fichier NativeMessagingHosts sans accord utilisateur plus explicite. Aucun test réel de capture X/YouTube/article depuis Dia n’est donc revendiqué à ce stade. Le comportement des sites dynamiques, le raccourci Dia et le retour exact au passage restent à vérifier dans le navigateur réel.
+
+La distribution reste expérimentale et non notarisée. Les détails d’installation et les limites de capture figurent dans BROWSER.md.
+
+---
+
+## Historique : Reprise 0.2.0
 
 ## Diagnostic V1
 

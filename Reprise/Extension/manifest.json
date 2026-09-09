@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Reprise — Garder au bord",
+  "version": "0.3.0",
+  "description": "Une référence à portée de main, sans formulaire. Capture explicite et locale.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoKjDF35PKiRP6BV81llSh9agIUxngEHEn4ytJEzB47E3FBeLC1o4GkYq+2fR0XLUIswHdx/n3T7nfGSWT2B/Iprz1lz3yK9KenHBjcSGP/KPZKHUhKj66eHI+Ym5UtUNSuRJu6KOJ5S+dh7tDL9V8XDvVA/tk+2Jsl7vWlE6wfDfJyjIIsqYrzCHOvI24tNPFt9bgidW2YMFpAfJW0OBaShRV2EChnrgwD8vJ4cS7vY4TmwVv9H6JshkIejiwqUcHsGEmHdzgfIEpHAeIoQDkNCfAx10ex1ja1Q7UUKIFqhRzLKq46lGPWeUixH7336c5IM4oLwPRvOS3nmzVA4ejwIDAQAB",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "nativeMessaging",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Garder au bord — Reprise"
+  },
+  "commands": {
+    "capture": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Garder cette page au bord"
+    }
+  }
+}

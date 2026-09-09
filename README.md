@@ -1,13 +1,19 @@
-# Reprise 0.2 — Mes fils
+# Reprise 0.3 — Garder au bord
 
-Un petit signet au bord du Mac pour garder où reprendre. À l’intérieur, les fils qu’on a mis de côté restent accessibles.
+Un petit signet au bord du Mac pour garder une référence pendant qu’on s’en sert. Capture en un geste depuis le navigateur, note facultative et retour à la source. À l’intérieur, les fils mis de côté restent accessibles.
 
 Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, le principe du panneau non activant et le suivi du pointeur servent de base. Les sources originales sont conservées ; la cible Reprise ne compile aucun provider IA ni updater.
 
+## Capture navigateur
+
+L’extension locale transmet titre, auteur, extrait sélectionné et position YouTube lorsqu’ils sont disponibles. Le raccourci proposé est **⌘⇧S**. Le pont Native Messaging confirme après sauvegarde dans l’app. Voir [le guide d’installation et les limites](Reprise/BROWSER.md).
+
+Le test de bout en bout dans Dia reste en attente de l’autorisation explicite d’installer le pont local ; la compilation et les tests isolés passent. Voir le journal de vérification.
+
 ## Utiliser
 
-- Survoler le signet de 22 × 76 points : un volet compact se déplie, avec le point de reprise et la source.
-- **Reprendre** ouvre le lien ou le fichier. **Ranger** libère le bord et conserve le fil dans l’app.
+- Survoler le signet de 22 × 76 points : un volet compact se déplie, avec le titre, l’extrait et la source.
+- **Ouvrir la source** ouvre le lien ou le fichier ; une capture YouTube propose son instant de reprise. **Copier avec la source** place le texte et son attribution dans le presse-papiers. **Ranger** libère le bord et conserve le fil dans l’app.
 - **Mes fils** rassemble les fils conservés : recherche dans les titres, phrases et sources, filtre De côté, édition et copie du point de reprise.
 - **Mettre au bord** remplace le fil actif ; le précédent reste dans la bibliothèque.
 - Le bouton de plateau dans l’encoche ouvre Mes fils. Le menu macOS propose aussi la création, le collage explicite, le choix du bord et Quitter.
@@ -17,7 +23,7 @@ Un seul fil est actif au bord. Les autres sont conservés, sans échéance ni no
 
 ## Construire et tester
 
-Command Line Tools Apple, Swift 6.2.1 testé sur macOS 26. Aucun package tiers requis pour la cible Reprise.
+Node.js pour les tests de l’extracteur ; Command Line Tools Apple, Swift 6.2.1 testé sur macOS 26. Aucun package tiers requis pour la cible Reprise.
 
 ```sh
 bash Reprise/build.sh
