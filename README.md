@@ -1,4 +1,4 @@
-# Reprise 0.3.2 — Garder au bord
+# Reprise 0.3.3 — Garder au bord
 
 Un petit signet au bord du Mac pour garder une référence pendant qu’on s’en sert. Capture en un geste depuis le navigateur, note facultative et retour à la source. À l’intérieur, les fils mis de côté restent accessibles.
 
@@ -7,6 +7,14 @@ Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, l
 ## Identité
 
 R ouvert, bleu #235CD6, bleu clair #89A7EA et blanc. Icônes app et extension disponibles dans [Brand](Reprise/Brand/README.md).
+
+## Carte à tranche
+
+Une feuille claire de 232 points pour la lecture, une tranche sombre de 56 points pour copier, annoter et ranger. Le volet garde ses 288 × 280 points. Le bouton Reprendre réunit la source et le retour ; une note sans lien ouvre Mes fils. Le relief des commandes réagit au survol et à la pression, avec Reduce Motion.
+
+La palette F0D8B5 / BDD0E7 / 324CF9 / 000000 est réservée à une prochaine passe de l’intérieur. Cette livraison conserve les deux bleus de l’identité.
+
+Retour source : tag `reprise-before-card-0.3.2`.
 
 ## Capture navigateur
 
@@ -17,7 +25,7 @@ La capture d’un post X depuis Dia est vérifiée de bout en bout, par le menu 
 ## Utiliser
 
 - Survoler le signet de 22 × 76 points : un volet compact se déplie, avec le titre, l’extrait et la source.
-- **Ouvrir la source** ouvre le lien ou le fichier ; une capture YouTube propose son instant de reprise. **Copier avec la source** place le texte et son attribution dans le presse-papiers. **Ranger** libère le bord et conserve le fil dans l’app.
+- **Reprendre** ouvre le lien ou le fichier ; une capture YouTube propose son instant de reprise. **Copier avec la source** place le texte et son attribution dans le presse-papiers. **Ranger** libère le bord et conserve le fil dans l’app.
 - **Mes fils** rassemble les fils conservés : recherche dans les titres, phrases et sources, filtre De côté, édition et copie du point de reprise.
 - **Mettre au bord** remplace le fil actif ; le précédent reste dans la bibliothèque.
 - Le bouton de plateau dans l’encoche ouvre Mes fils. Le menu macOS propose aussi la création, le collage explicite, le choix du bord et Quitter.

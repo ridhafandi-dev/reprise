@@ -1,3 +1,25 @@
+# Reprise 0.3.3 — Carte à tranche
+
+## Livré
+- Lecture sur feuille claire, tranche de commandes au bord, filigrane R, pied de reprise bleu.
+- Dimensions conservées : fermé 22×76, ouvert 288×280, canvas 288×304 points.
+- Padding16 pour la lecture ; espaces4/8/12/16 ; échelle12/16/24 points. La tranche mesure56, cibles32. Le rythme de la bibliothèque est hors scope.
+- Tranche inversée au bord gauche. Labels accessibles et aides sur les icônes. Retour visuel local au hover et au clic, animation supprimée avec Reduce Motion.
+- Aucune mutation du schéma de données, aucune modification de l’extension (reste0.3.2).
+
+## Vérifications de cette passe
+- Build natif optimisé + signature ad hoc stricte réussis. Une métadonnée FinderInfo ajoutée à la copie Documents a été retirée ; vérification stricte du bundle livré ensuite réussie.
+- Suite Reprise complète : modèle/persistence/migration, hover, capture et extracteur JS passent.
+- App réelle : carte ouverte à droite puis à gauche ; bord droit rétabli. Copie affiche la confirmation et la coche. Annotation ouvre le bon fil, annulée sans enregistrer. Retour Mes fils fonctionnel. Sept fils conservés.
+- Hash du fichier utilisateur identique avant/après les essais : aucune note modifiée.
+- Neuf rendus SwiftUI hors écran : courant, gauche, post X, titre/note longs, sans URL, erreur, vide, drop, fermé. La découpe extérieure donne des bandes jaunes dans ImageRenderer, absentes du panneau natif : ces rendus ne sont pas la preuve du contour. Le contenu, sa lisibilité et l’absence de chevauchement ont été inspectés ; le contour est vérifié dans l’app réelle.
+- Pas de mesure instrumentée de FPS, de test VoiceOver complet ni de nouveau glisser-déposer réel dans cette passe. Le réglage Reduce Motion est respecté par code ; aucun changement des préférences système pour le tester.
+
+## Retour
+Tag git `reprise-before-card-0.3.2` et ZIP du bundle précédent fourni dans Reprise-retour. Fermer Reprise avant tout remplacement. Les données restent hors du bundle.
+
+---
+
 # Reprise 0.3.2 — Identité
 
 Nouveau R vectoriel, icône macOS ICNS et icônes Chromium 16/32/48/128. Palette #235CD6 / #89A7EA / blanc. Compilation et signature ad hoc réussies, app mise à jour et rendus Mes fils / encoche inspectés. Structure intérieure et comportements conservés. Six fils existants retrouvés.
