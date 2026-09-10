@@ -1,12 +1,12 @@
 # AEGIS Gate — contrat V0
 
-Statut : noyau local et CLI, sans interface Gate ni connexion du notch à ce noyau. L’étude bookmark reste préservée par le tag annoté `bookmark-study-0.4.0`, sur `75dd1bbd6a935a9116ee8815e21088cfb2b6344f`. L’expérimentation est sur `feature/aegis-gate-v0`.
+Statut : noyau local, CLI et projection SwiftUI Gate minimale, sans exécution de l’action demandée. L’étude bookmark reste préservée par le tag annoté `bookmark-study-0.4.0`, sur `75dd1bbd6a935a9116ee8815e21088cfb2b6344f`. L’expérimentation est sur `feature/aegis-gate-v0`.
 
 ## 1. Évolution explicite du contrat
 
 La demande d’implémentation succède au contrat documentaire initial. Elle fixe trois changements : empreinte de la représentation canonique **sans le digest** plutôt que des octets bruts ; durée de vie de **30 à 900 secondes** ; stockage par défaut dans `~/Library/Application Support/Reprise/GateInbox`. Les textes sont normalisés avant signature, jamais tronqués. Le reçu a exactement les six champs demandés ci-dessous ; l’algorithme SHA-256 est fixé par la version 1, et le demandeur est couvert par le digest sans champ supplémentaire dans le reçu.
 
-Le noyau est indépendant de `PageCapture`, `ThreadNote`, `RepriseStore`, `thread.json`, `CaptureInbox` et du pont navigateur. Il ne migre aucune référence. La compilation inclut un exécutable distinct `RepriseGate` dans le bundle construit, sans modifier le code de l’interface bookmark ni installer ou lancer le bundle. Les tests isolent tous les fichiers Gate ; ils n’utilisent pas le stockage utilisateur.
+Le noyau est indépendant de `PageCapture`, `ThreadNote`, `RepriseStore`, `thread.json`, `CaptureInbox` et du pont navigateur. Il ne migre aucune référence. La compilation inclut un exécutable distinct `RepriseGate` dans le bundle construit, avec un point d’entrée SwiftUI Gate distinct du modèle bookmark, sans installer le bundle. Le test visuel utilise un build temporaire et un stockage isolé. Les tests isolent tous les fichiers Gate ; ils n’utilisent pas le stockage utilisateur.
 
 ## 2. Invariants
 
@@ -99,7 +99,7 @@ RepriseGate ask --requester "Codex" --action "Publier la branche" \
   --effect difficult --evidence "Tests locaux réussis" --ttl 300
 ```
 
-La CLI valide, signe et dépose la requête, puis émet une notification locale `tools.pulsar.reprise.gate.requestAvailable` si l’app Reprise est déjà ouverte. Elle ne lance jamais l’app et n’utilise pas la notification du pont navigateur. L’app bookmark actuelle ne traite pas ce nouveau signal ; son intégration attend la passe UI.
+La CLI valide, signe et dépose la requête, puis émet une notification locale `tools.pulsar.reprise.gate.requestAvailable` si l’app Reprise est déjà ouverte. Elle ne lance jamais l’app et n’utilise pas la notification du pont navigateur. Le build Gate (`tools.pulsar.reprise.gate`) traite ce signal et interroge aussi la file localement. L’app bookmark installée (`tools.pulsar.reprise.study`) reste indépendante.
 
 En mode normal, stdout contient une unique décision JSON après vérification et nettoyage, sans logs mélangés. Les erreurs vont sur stderr, sans JSON de succès. À expiration sans réponse, la CLI fait publier le reçu `expired` par le noyau, puis le relit. Elle revérifie l’expiration à la livraison, notamment après les écritures de nettoyage.
 
@@ -109,8 +109,8 @@ Codes de sortie pour `ask` : **0** autorisation, **2** refus, **3** expiration, 
 
 ## 8. Frontière de confiance et limites
 
-Cette V0 sert des processus locaux coopératifs dans une session de confiance. Un hash lie un contenu, mais n’authentifie ni le demandeur ni l’humain. Un processus malveillant du même compte, ou un administrateur, peut falsifier le stockage. Aucun IPC authentifié, contrôle de provenance du consentement ou mécanisme imposant la consommation chez le demandeur n’est livré ici. `GateStore.decide` est le point d’entrée du futur adaptateur humain ; aucune sous-commande CLI ne permet d’approuver.
+Cette V0 sert des processus locaux coopératifs dans une session de confiance. Un hash lie un contenu, mais n’authentifie ni le demandeur ni l’humain. Un processus malveillant du même compte, ou un administrateur, peut falsifier le stockage. Aucun IPC authentifié, contrôle de provenance du consentement ou mécanisme imposant la consommation chez le demandeur n’est livré ici. `GateStore.decide` est le point d’entrée de l’adaptateur humain `GateSession` ; aucune sous-commande CLI ne permet d’approuver.
 
-La publication atomique et les `fsync` sont testés en fonctionnement, pas sous coupure électrique physique. Les pannes de stockage, horloges manipulées hors observation, authenticité du reçu et preuve réelle de consommation restent à renforcer avant une utilisation comme frontière de sécurité. Aucune interface Gate n’est construite à cette étape.
+La publication atomique et les `fsync` sont testés en fonctionnement, pas sous coupure électrique physique. Les pannes de stockage, horloges manipulées hors observation, authenticité du reçu et preuve réelle de consommation restent à renforcer avant une utilisation comme frontière de sécurité. La projection Gate est décrite dans `GATE-UI.md` ; son panneau non activant ne constitue pas une preuve cryptographique du consentement.
 
-Les sept fichiers inspectés lors de l’étape initiale restent une référence technique : `Capture.swift`, `NativeHost.swift`, `Store.swift`, `CompactNotch.swift`, `App.swift`, `build.sh`, `test.sh`. Seuls les deux scripts évoluent pour compiler et tester le noyau distinct ; les captures navigateur et les fils ne deviennent pas son modèle métier.
+Les sept fichiers inspectés lors de l’étape initiale restent une référence technique : `Capture.swift`, `NativeHost.swift`, `Store.swift`, `CompactNotch.swift`, `App.swift`, `build.sh`, `test.sh`. L’étape du noyau a modifié les deux scripts. L’étape SwiftUI remplace le point d’entrée `App.swift` par Gate, sans instancier le store bookmark. Les captures navigateur et les fils ne deviennent pas son modèle métier.

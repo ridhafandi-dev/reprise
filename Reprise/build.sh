@@ -8,6 +8,8 @@ REPRISE_CACHE="${TMPDIR:-/tmp}/reprise-swift-module-cache"
 mkdir -p "$REPRISE_OUT/Reprise.app/Contents/MacOS" "$REPRISE_OUT/Reprise.app/Contents/Resources" "$REPRISE_CACHE"
 swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
   "$REPRISE_ROOT/Reprise/App.swift" "$REPRISE_ROOT/Reprise/Thread.swift" \
+  "$REPRISE_ROOT/Reprise/GateModels.swift" "$REPRISE_ROOT/Reprise/GateStore.swift" \
+  "$REPRISE_ROOT/Reprise/GateSession.swift" "$REPRISE_ROOT/Reprise/GateNotch.swift" \
   "$REPRISE_ROOT/Reprise/Capture.swift" "$REPRISE_ROOT/Reprise/Store.swift" "$REPRISE_ROOT/Reprise/Views.swift" \
   "$REPRISE_ROOT/Reprise/NotchSupport.swift" "$REPRISE_ROOT/Reprise/BrandGeometry.swift" "$REPRISE_ROOT/Reprise/BrandMark.swift" \
   "$REPRISE_ROOT/Reprise/Surface.swift" "$REPRISE_ROOT/Reprise/CompactNotch.swift" "$REPRISE_ROOT/Reprise/LibraryView.swift" \
@@ -31,7 +33,7 @@ cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>Reprise</string>
-<key>CFBundleIdentifier</key><string>tools.pulsar.reprise.study</string>
+<key>CFBundleIdentifier</key><string>tools.pulsar.reprise.gate</string>
 <key>CFBundleName</key><string>Reprise</string>
 <key>CFBundleIconFile</key><string>Reprise</string>
 <key>CFBundlePackageType</key><string>APPL</string>

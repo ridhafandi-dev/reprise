@@ -20,3 +20,8 @@ swiftc -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" \
 swiftc -parse-as-library -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" \
   Reprise/GateModels.swift Reprise/GateStore.swift Reprise/GateCLI.swift -o "$REPRISE_TEST_DIR/RepriseGate"
 python3 Reprise/GateCLITests.py "$REPRISE_TEST_DIR/RepriseGate"
+
+swiftc -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" \
+  Reprise/GateModels.swift Reprise/GateStore.swift Reprise/GateSession.swift Reprise/GateSessionTests.swift \
+  -o "$REPRISE_TEST_DIR/gate-session-tests"
+"$REPRISE_TEST_DIR/gate-session-tests"

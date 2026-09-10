@@ -31,7 +31,7 @@ import AppKit
         let store = try GateStore(directory: GateStore.defaultDirectory())
         try store.enqueue(request)
         // Only a wake-up hint, never launch an app, pass action text, or contact the network.
-        if !NSRunningApplication.runningApplications(withBundleIdentifier: "tools.pulsar.reprise.study").isEmpty {
+        if !NSRunningApplication.runningApplications(withBundleIdentifier: "tools.pulsar.reprise.gate").isEmpty {
             DistributedNotificationCenter.default().postNotificationName(
                 NSNotification.Name(GateStore.notification), object: nil, userInfo: nil, deliverImmediately: true)
         }
