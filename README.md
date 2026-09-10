@@ -4,6 +4,18 @@ Un petit signet au bord du Mac pour garder une référence pendant qu’on s’e
 
 Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, le principe du panneau non activant et le suivi du pointeur servent de base. Les sources originales sont conservées ; la cible Reprise ne compile aucun provider IA ni updater.
 
+## En images
+
+Captures de l’application native **Reprise 0.4.0** sur macOS.
+
+**Mes fils** — retrouver une référence, lire son contenu et ajouter une note pour la suite.
+
+<img src="docs/screenshots/reprise-library.jpg" alt="Bibliothèque Reprise : liste des fils à gauche, post X dans le panneau bleu et zone d’annotation en dessous." width="820">
+
+**Au bord de l’écran** — rouvrir la source, copier ou annoter depuis la carte compacte.
+
+<img src="docs/screenshots/reprise-edge.jpg" alt="Carte Reprise ouverte au bord droit : verre fumé, source et commandes Copier et Annoter." width="288">
+
 ## Identité
 
 R ouvert, bleu #235CD6, bleu clair #89A7EA et blanc. Icônes app et extension disponibles dans [Brand](Reprise/Brand/README.md).
