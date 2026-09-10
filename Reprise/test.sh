@@ -11,3 +11,12 @@ swiftc -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" Reprise/C
 swiftc -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" Reprise/Capture.swift Reprise/Thread.swift Reprise/Store.swift Reprise/NotchSupport.swift Reprise/CaptureTests.swift -o "$REPRISE_TEST_DIR/capture"
 "$REPRISE_TEST_DIR/capture"
 node Reprise/Extension/tests.cjs
+
+# Gate tests never use the installed application's data directory.
+export REPRISE_GATE_PATH="$REPRISE_TEST_DIR/gate-inbox"
+swiftc -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" \
+  Reprise/GateModels.swift Reprise/GateStore.swift Reprise/GateTests.swift -o "$REPRISE_TEST_DIR/gate-tests"
+"$REPRISE_TEST_DIR/gate-tests"
+swiftc -parse-as-library -module-cache-path "${TMPDIR:-/tmp}/reprise-swift-module-cache" \
+  Reprise/GateModels.swift Reprise/GateStore.swift Reprise/GateCLI.swift -o "$REPRISE_TEST_DIR/RepriseGate"
+python3 Reprise/GateCLITests.py "$REPRISE_TEST_DIR/RepriseGate"

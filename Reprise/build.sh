@@ -19,6 +19,11 @@ swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
   "$REPRISE_ROOT/Reprise/Thread.swift" "$REPRISE_ROOT/Reprise/BridgeIdentity.swift" \
   -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseBridge"
 codesign --force --sign - "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseBridge"
+swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
+  "$REPRISE_ROOT/Reprise/GateModels.swift" "$REPRISE_ROOT/Reprise/GateStore.swift" \
+  "$REPRISE_ROOT/Reprise/GateCLI.swift" \
+  -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseGate"
+codesign --force --sign - "$REPRISE_OUT/Reprise.app/Contents/MacOS/RepriseGate"
 cp "$REPRISE_ROOT/Reprise/Brand/Reprise.icns" "$REPRISE_OUT/Reprise.app/Contents/Resources/Reprise.icns"
 cp "$REPRISE_ROOT/LICENSE" "$REPRISE_OUT/Reprise.app/Contents/Resources/LICENSE"
 cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
