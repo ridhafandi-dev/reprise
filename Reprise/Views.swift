@@ -13,11 +13,11 @@ enum Ink {
 struct QuietButton: ButtonStyle {
     var primary = false
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.font(.system(size: 13, weight: .medium))
+        configuration.label.font(.system(size: 14, weight: .medium))
             .padding(.horizontal, 16).padding(.vertical, 12)
             .frame(maxWidth: primary ? .infinity : nil)
-            .foregroundStyle(primary ? Color.white : Color.white.opacity(0.8))
-            .background(primary ? Ink.blue : Color.white.opacity(configuration.isPressed ? 0.13 : 0.06), in: RoundedRectangle(cornerRadius: 12))
+            .foregroundStyle(primary ? Color.white : Atelier.ink)
+            .background(primary ? Atelier.royal : Atelier.ink.opacity(0.045), in: Capsule())
             .opacity(configuration.isPressed ? 0.72 : 1)
     }
 }
@@ -29,16 +29,16 @@ struct EditorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                HStack(spacing: 8) { RepriseMark(color: Ink.sky).frame(width: 13, height: 13); Text("REPRISE").tracking(2) }.foregroundStyle(Ink.sky)
+                HStack(spacing: 8) { RepriseMark(color: Atelier.ink).frame(width: 13, height: 13); Text("REPRISE").tracking(2) }.foregroundStyle(Atelier.ink)
                 Spacer()
-                Text("UNE SEULE PLACE").foregroundStyle(Ink.muted).tracking(1.5)
-            }.font(.system(size: 10, weight: .medium))
-            Text("Un mot pour la suite ?").font(.system(size: 30, weight: .regular, design: .serif)).foregroundStyle(Ink.paper)
-            Text("Ta référence suffit. Ajoute une note si elle t’aide.").foregroundStyle(Ink.muted).font(.system(size: 13))
+                Text("NOTE FACULTATIVE").foregroundStyle(Atelier.ink.opacity(0.5)).tracking(1.5)
+            }.font(.system(size: 11, weight: .medium))
+            Text("Un mot pour la suite ?").font(.system(size: 24, weight: .medium)).foregroundStyle(Atelier.ink)
+            Text("Ta référence suffit. Ajoute une note si elle t’aide.").foregroundStyle(Atelier.ink.opacity(0.5)).font(.system(size: 14))
             VStack(alignment: .leading, spacing: 8) {
-                Text("TA NOTE · FACULTATIVE").font(.system(size: 10)).tracking(1.2).foregroundStyle(Ink.muted)
-                TextEditor(text: $store.intention).font(.system(size: 17)).scrollContentBackground(.hidden)
-                    .padding(12).frame(height: 108).background(.white.opacity(0.055), in: RoundedRectangle(cornerRadius: 12))
+                Text("TA NOTE · FACULTATIVE").font(.system(size: 11)).tracking(1.2).foregroundStyle(Atelier.ink.opacity(0.5))
+                TextEditor(text: $store.intention).font(.system(size: 14)).scrollContentBackground(.hidden)
+                    .padding(12).frame(height: 108).background(.white.opacity(0.45), in: RoundedRectangle(cornerRadius: 12))
                     .focused($focus).accessibilityLabel("Le point de reprise")
                 TextField("Un nom pour ce fil · facultatif", text: $store.title).textFieldStyle(.roundedBorder).accessibilityLabel("Nom du fil")
                 HStack {
@@ -46,15 +46,15 @@ struct EditorView: View {
                     Button { chooseFile() } label: { Image(systemName: "folder") }.help("Choisir un fichier")
                 }
             }
-            if !store.error.isEmpty { Text(store.error).font(.system(size: 12)).foregroundStyle(.orange) }
+            if !store.error.isEmpty { Text(store.error).font(.system(size: 12)).foregroundStyle(Color(red: 0.65, green: 0.12, blue: 0.16)) }
             Text("Ce fil sera au bord. Les autres restent dans Mes fils.")
-                .font(.system(size: 11)).foregroundStyle(Ink.muted)
+                .font(.system(size: 11)).foregroundStyle(Atelier.ink.opacity(0.5))
             HStack {
                 Button("Annuler") { store.editing = false; close() }.keyboardShortcut(.cancelAction).buttonStyle(QuietButton())
                 Button("Garder ce fil") { store.save(); if !store.editing { close() } }
                     .keyboardShortcut(.return, modifiers: .command).buttonStyle(QuietButton(primary: true)).disabled(!store.canSave)
             }
-        }.padding(32).frame(width: 480).background(Ink.black).preferredColorScheme(.dark)
+        }.padding(32).frame(width: 480).background(Atelier.paper).foregroundStyle(Atelier.ink).preferredColorScheme(.light)
             .onAppear { focus = true }
     }
     private func chooseFile() {

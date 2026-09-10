@@ -111,7 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     func cursorMoved() {
         guard let panel, let host else { return }
-        let size = store.isOpen ? RepriseMetrics.open : RepriseMetrics.closed
+        let size = store.isOpen ? RepriseMetrics.expandedSize(note: store.note, targeted: store.targeted) : RepriseMetrics.closed
         let rect = NSRect(x: store.side == .right ? RepriseMetrics.canvas.width - size.width : 0,
                           y: (RepriseMetrics.canvas.height - size.height) / 2,
                           width: size.width, height: size.height)
@@ -133,7 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if welcome == nil {
             let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 820, height: 550), styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
             window.title = "Reprise — Mes fils"; window.titlebarAppearsTransparent = true; window.titleVisibility = .hidden
-            window.isReleasedWhenClosed = false; window.backgroundColor = NSColor(Ink.paper)
+            window.isReleasedWhenClosed = false; window.backgroundColor = NSColor(Atelier.paper)
             window.contentView = NSHostingView(rootView: LibraryView(store: store))
             window.center(); welcome = window
         }
@@ -143,8 +143,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if let editor { editor.close() }
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 480, height: 490), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "Garder un fil — Reprise"; window.titlebarAppearsTransparent = true
-        window.backgroundColor = NSColor(Ink.black); window.isReleasedWhenClosed = false
-        window.appearance = NSAppearance(named: .darkAqua); window.delegate = self
+        window.backgroundColor = NSColor(Atelier.paper); window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: .aqua); window.delegate = self
         window.contentView = NSHostingView(rootView: EditorView(store: store) { [weak self] in self?.editor?.close() })
         window.center(); editor = window; window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true)
     }

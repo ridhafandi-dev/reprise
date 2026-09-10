@@ -1,3 +1,33 @@
+# Reprise 0.4.0 — Correction de direction
+
+## Direction et traduction
+
+Cible visuelle produite avant la réécriture à partir de la référence utilisateur de verre continu. Le mockup ImageGen est une cible de composition, pas une capture du logiciel. Il n’est pas utilisé comme image de fond dans l’app.
+
+- Carte : NSVisualEffectView / hudWindow / behindWindow, teinte sombre de contrôle, reflet courbe, contenu compact18/12/11pt ; commandes copier/annoter groupées et menu de bord. Suppression du R agrandi, de la plaque blanche et du gros bouton.
+- Bibliothèque : palette beige/bleu doux/royal/noir, sidebar224pt, titre28pt dans un panneau bleu, note hors panneau. Un extrait identique au titre n’est pas répété. Un texte sans URL reste lisible dans la zone défilante.
+- Éditeur : palette et typographie cohérentes avec la bibliothèque.
+- Panel : cadre natif288×304 inchangé, actif224 ou264pt selon contenu et196pt pendant le drop. App et SwiftUI utilisent la même fonction de dimensions pour le hit-testing. Motion des dimensions respecte Reduce Motion.
+
+## Preuves de cette passe
+
+- Build natif0.4.0, signature ad hoc stricte et diff-check réussis.
+- Suite existante modèle/persistence/migration, hover, capture Swift et extraction JS passée. Aucun changement du modèle de stockage ou du protocole extension.
+- Captures CUA de l’app réelle comparées à la cible. Deux corrections après première comparaison : largeur de titre réduite pour le retour à la ligne, verre assombri sur fond blanc. La hauteur pauvre en métadonnées a été réduite.
+- CUA réel : recherche sans résultat puis retour, filtre De côté excluant le fil actif, sélection de post, lecture de note sans lien, ouverture du bon éditeur puis annulation, copie avec confirmation/coche, menu Mes fils utilisable après attente, carte aux bords gauche/droit et restauration droite.
+- Seven notes preserved; file SHA256 before/after = 1e2826e1a6bad501da6ec68fc5b6ea825989ac1269f4289ae18364392ce732a9.
+- ImageRenderer hors écran n’a pas rendu les contrôles AppKit ni les zones défilantes : sorties écartées, pas utilisées comme preuve visuelle.
+
+## Limites de preuve
+
+Pas de test VoiceOver exhaustif, de mesure FPS, de test visuel après changement de Reduce Motion/Reduce Transparency ni de nouvel essai YouTube réel. Le changement de taille et le dépôt nécessitent encore une appréciation prolongée au pointeur. Le matériau varie volontairement selon le fond. Le menu de bord est natif macOS.
+
+## Retour
+
+Le ZIP0.3.2 demeure dans outputs/Reprise-retour. Le fork conserve le tag `reprise-before-card-0.3.2`. Aucun fichier utilisateur n’est dans le bundle app.
+
+---
+
 # Reprise 0.3.3 — Carte à tranche
 
 ## Livré

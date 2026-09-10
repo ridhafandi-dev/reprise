@@ -10,7 +10,7 @@ swiftc -parse-as-library -O -module-cache-path "$REPRISE_CACHE" \
   "$REPRISE_ROOT/Reprise/App.swift" "$REPRISE_ROOT/Reprise/Thread.swift" \
   "$REPRISE_ROOT/Reprise/Capture.swift" "$REPRISE_ROOT/Reprise/Store.swift" "$REPRISE_ROOT/Reprise/Views.swift" \
   "$REPRISE_ROOT/Reprise/NotchSupport.swift" "$REPRISE_ROOT/Reprise/BrandGeometry.swift" "$REPRISE_ROOT/Reprise/BrandMark.swift" \
-  "$REPRISE_ROOT/Reprise/CompactNotch.swift" "$REPRISE_ROOT/Reprise/LibraryView.swift" \
+  "$REPRISE_ROOT/Reprise/Surface.swift" "$REPRISE_ROOT/Reprise/CompactNotch.swift" "$REPRISE_ROOT/Reprise/LibraryView.swift" \
   "$REPRISE_ROOT/Sources/Notch/SideNotchShape.swift" \
   "$REPRISE_ROOT/Sources/Notch/NotchMotion.swift" \
   -o "$REPRISE_OUT/Reprise.app/Contents/MacOS/Reprise"
@@ -30,8 +30,8 @@ cat > "$REPRISE_OUT/Reprise.app/Contents/Info.plist" <<'PLIST'
 <key>CFBundleName</key><string>Reprise</string>
 <key>CFBundleIconFile</key><string>Reprise</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.3.3</string>
-<key>CFBundleVersion</key><string>6</string>
+<key>CFBundleShortVersionString</key><string>0.4.0</string>
+<key>CFBundleVersion</key><string>7</string>
 <key>LSMinimumSystemVersion</key><string>15.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSHumanReadableCopyright</key><string>Reprise 2026. Based on Codenotch © 2026 Vinz, MIT.</string>

@@ -1,4 +1,4 @@
-# Reprise 0.3.3 — Garder au bord
+# Reprise 0.4.0 — Garder au bord
 
 Un petit signet au bord du Mac pour garder une référence pendant qu’on s’en sert. Capture en un geste depuis le navigateur, note facultative et retour à la source. À l’intérieur, les fils mis de côté restent accessibles.
 
@@ -8,11 +8,13 @@ Fork natif de [Codenotch](https://github.com/vinzdg/codenotch), dont la forme, l
 
 R ouvert, bleu #235CD6, bleu clair #89A7EA et blanc. Icônes app et extension disponibles dans [Brand](Reprise/Brand/README.md).
 
-## Carte à tranche
+## Interface 0.4.0
 
-Une feuille claire de 232 points pour la lecture, une tranche sombre de 56 points pour copier, annoter et ranger. Le volet garde ses 288 × 280 points. Le bouton Reprendre réunit la source et le retour ; une note sans lien ouvre Mes fils. Le relief des commandes réagit au survol et à la pression, avec Reduce Motion.
+La carte utilise un matériau natif fumé qui échantillonne le bureau derrière elle. Une courbure lumineuse relie les commandes à la surface. Copier et Annoter sont groupés ; Mes fils, Ranger et le choix du bord sont dans le menu « … ». Le lien de reprise remplace le gros bouton. Largeur288pt ; hauteur224pt pour un titre seul,264pt pour un extrait,196pt pendant le dépôt. L'encoche fermée reste22×76pt, la fenêtre native reste fixe.
 
-La palette F0D8B5 / BDD0E7 / 324CF9 / 000000 est réservée à une prochaine passe de l’intérieur. Cette livraison conserve les deux bleus de l’identité.
+La bibliothèque adopte le beige #F0D8B5, le bleu doux #BDD0E7, le bleu royal #324CF9 et le noir. Un titre unique, la source et l'extrait se lisent dans le panneau bleu ; une bande distincte ouvre la note personnelle. Les notes sans lien sont lisibles dans le panneau. Recherche, filtre, copie, annotation et rangement restent locaux.
+
+Les icônes de marque app/extension conservent l’identité approuvée. L’extension reste en0.3.2 ; aucun rechargement nécessaire pour cette passe native.
 
 Retour source : tag `reprise-before-card-0.3.2`.
 
@@ -28,7 +30,7 @@ La capture d’un post X depuis Dia est vérifiée de bout en bout, par le menu 
 - **Reprendre** ouvre le lien ou le fichier ; une capture YouTube propose son instant de reprise. **Copier avec la source** place le texte et son attribution dans le presse-papiers. **Ranger** libère le bord et conserve le fil dans l’app.
 - **Mes fils** rassemble les fils conservés : recherche dans les titres, phrases et sources, filtre De côté, édition et copie du point de reprise.
 - **Mettre au bord** remplace le fil actif ; le précédent reste dans la bibliothèque.
-- Le bouton de plateau dans l’encoche ouvre Mes fils. Le menu macOS propose aussi la création, le collage explicite, le choix du bord et Quitter.
+- Le menu « … » dans la carte ouvre Mes fils. Le menu macOS propose aussi la création, le collage explicite, le choix du bord et Quitter.
 - ⌘0 ouvre Mes fils ; ⌘N crée un fil dans cette fenêtre ; ⌘Entrée enregistre dans l’éditeur.
 
 Un seul fil est actif au bord. Les autres sont conservés, sans échéance ni notification. Une étape d’annulation permet de revenir sur le dernier changement du fil actif.

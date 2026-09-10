@@ -3,7 +3,10 @@ import UniformTypeIdentifiers
 
 enum RepriseMetrics {
     static let closed = CGSize(width: 22, height: 76)
-    static let open = CGSize(width: 288, height: 280)
+    static let open = CGSize(width: 288, height: 264)
+    static func expandedSize(note: ThreadNote?, targeted: Bool) -> CGSize {
+        CGSize(width: 288, height: targeted ? 196 : note == nil || note?.preview == note?.title ? 224 : 264)
+    }
     static let canvas = CGSize(width: 288, height: 304)
     static let motion = Animation.spring(response: 0.30, dampingFraction: 0.91)
 }
@@ -12,13 +15,13 @@ struct RepriseNotch: View {
     @ObservedObject var store: RepriseStore
     @Environment(\.accessibilityReduceMotion) var reduceMotion
     var body: some View {
-        let size = store.isOpen ? RepriseMetrics.open : RepriseMetrics.closed
+        let size = store.isOpen ? RepriseMetrics.expandedSize(note: store.note, targeted: store.targeted) : RepriseMetrics.closed
         let alignment: Alignment = store.side == .right ? .trailing : .leading
         let shape = SideNotchShape(edge: store.side, curlRadius: 9, cornerRadius: 16)
         ZStack(alignment: alignment) {
-            shape.fill(Ink.black).frame(width: size.width, height: size.height)
+            shape.fill(store.isOpen ? Color.clear : Ink.black).frame(width: size.width, height: size.height)
             if store.isOpen {
-                content.frame(width: 288, height: 280)
+                content.frame(width: size.width, height: size.height)
                     .transition(.opacity.combined(with: .offset(x: store.side == .right ? 8 : -8)))
             } else {
                 Button { store.reveal() } label: {
@@ -31,137 +34,112 @@ struct RepriseNotch: View {
         .frame(width: size.width, height: size.height)
         .clipShape(shape)
         .onDrop(of: [UTType.fileURL.identifier, UTType.url.identifier, UTType.utf8PlainText.identifier], isTargeted: $store.targeted, perform: acceptDrop)
-        .animation(reduceMotion ? nil : RepriseMetrics.motion, value: store.isOpen)
+        .animation(reduceMotion ? nil : RepriseMetrics.motion, value: size)
         .frame(width: RepriseMetrics.canvas.width, height: RepriseMetrics.canvas.height, alignment: alignment)
         .preferredColorScheme(.dark)
     }
-    // The reading surface and the controls are separate physical zones.
-    // Keeping both within the existing canvas preserves edge hit-testing.
     var content: some View {
-        HStack(spacing: 0) {
-            if store.side == .left { controlSpine }
-            readingSurface
-            if store.side == .right { controlSpine }
+        ZStack {
+            RepriseGlass()
+            Color(red: 0.04, green: 0.055, blue: 0.08).opacity(0.48)
+            LinearGradient(colors: [Color.white.opacity(0.07), Ink.sky.opacity(0.06), Color.black.opacity(0.12)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            SurfaceFold(left: store.side == .left)
+                .stroke(Color.white.opacity(0.2), lineWidth: 8).blur(radius: 6)
+                .accessibilityHidden(true)
+            SurfaceFold(left: store.side == .left)
+                .stroke(LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.12), .white.opacity(0.35)], startPoint: .top, endPoint: .bottom), lineWidth: 0.7)
+                .accessibilityHidden(true)
+            readingContent
+                .padding(.leading, store.side == .left ? 40 : 16)
+                .padding(.trailing, store.side == .right ? 40 : 16)
+                .padding(.vertical, 24)
+            VStack {
+                Button { store.fold() } label: {
+                    Image(systemName: store.side == .right ? "chevron.right" : "chevron.left")
+                        .font(.system(size: 12)).frame(width: 28, height: 28)
+                }.buttonStyle(SurfaceButton(dark: true, filled: true))
+                    .accessibilityLabel("Refermer le fil").help("Refermer")
+                Spacer()
+                Menu {
+                    Button("Mes fils") { store.showWelcome?() }
+                    if store.note != nil { Button("Ranger le fil", action: store.release) }
+                    if store.archive.previous != nil { Button("Annuler le dernier rangement", action: store.undo) }
+                    Divider()
+                    Button("Changer de bord") { store.side = store.side == .right ? .left : .right }
+                } label: {
+                    Image(systemName: "ellipsis").font(.system(size: 12)).frame(width: 28, height: 28)
+                }.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                    .accessibilityLabel("Actions du fil").help("Mes fils et rangement")
+            }
+            .padding(.vertical, 24).padding(.horizontal, 4)
+            .frame(maxWidth: .infinity, alignment: store.side == .right ? .trailing : .leading)
         }
-        .padding(.vertical, 12)
+        .overlay {
+            SideNotchShape(edge: store.side, curlRadius: 9, cornerRadius: 16)
+                .stroke(.white.opacity(0.28), lineWidth: 0.7).allowsHitTesting(false)
+        }
     }
 
-    private var readingSurface: some View {
+    private var readingContent: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Circle().fill(store.targeted ? Ink.blue : Ink.sky).frame(width: 4, height: 4)
-                Text(store.targeted ? "DÉPOSER" : (store.notice.isEmpty ? store.note?.kindLabel ?? "PLACE LIBRE" : store.notice))
-                    .font(.system(size: 12, weight: .medium)).lineLimit(1)
-                Spacer(minLength: 0)
-                if store.notice.isEmpty, let time = store.note?.timeLabel {
-                    Text(time).font(.system(size: 12)).monospacedDigit()
-                }
-            }.foregroundStyle(Ink.blue)
-
             if store.targeted {
-                Text("Dépose.\nC’est gardé.").font(.system(size: 24, weight: .semibold))
-                Text("Un lien, un fichier ou quelques mots.")
-                    .font(.system(size: 16)).foregroundStyle(Color.black.opacity(0.62))
+                Text("DÉPOSER ICI").font(.system(size: 11, weight: .medium)).tracking(1)
+                Text("Garde la suite.").font(.system(size: 18, weight: .medium))
+                Text("Un lien, un fichier ou un passage.").font(.system(size: 12)).foregroundStyle(.white.opacity(0.65))
                 Spacer(minLength: 8)
-                Image(systemName: "arrow.down.to.line").font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(Ink.blue).frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "arrow.down.to.line").font(.system(size: 18)).foregroundStyle(Ink.sky)
             } else if let note = store.note {
-                Text(note.title).font(.system(size: 24, weight: .semibold))
-                    .tracking(-0.6).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
-                    .help(note.title)
+                HStack(spacing: 8) {
+                    SourceGlyph(note: note, size: 18)
+                    Text(store.notice.isEmpty ? note.kindLabel : store.notice)
+                        .font(.system(size: 11, weight: .medium)).lineLimit(1)
+                    Spacer(minLength: 0)
+                    if let time = note.timeLabel { Text(time).font(.system(size: 11)).monospacedDigit() }
+                }.foregroundStyle(.white.opacity(0.64))
+                Text(note.title).font(.system(size: 18, weight: .medium)).tracking(-0.3)
+                    .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading).help(note.title)
                 if !store.error.isEmpty {
-                    Text(store.error).font(.system(size: 12)).foregroundStyle(Color(red: 0.65, green: 0.12, blue: 0.16)).lineLimit(3)
+                    Text(store.error).font(.system(size: 12)).foregroundStyle(Color(red: 1, green: 0.72, blue: 0.66)).lineLimit(3)
                 } else if note.preview != note.title {
-                    Text(note.preview).font(.system(size: 16)).lineLimit(2)
-                        .foregroundStyle(Color.black.opacity(0.66))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(note.preview).font(.system(size: 12)).foregroundStyle(.white.opacity(0.72)).lineLimit(2)
                 }
+                Text(note.context?.author?.isEmpty == false ? note.context!.author! : note.sourceLabel)
+                    .font(.system(size: 11)).foregroundStyle(.white.opacity(0.55)).lineLimit(1)
                 Spacer(minLength: 8)
-                if let author = note.context?.author, !author.isEmpty {
-                    Text(author).font(.system(size: 12)).foregroundStyle(Color.black.opacity(0.6)).lineLimit(1)
-                }
+                Rectangle().fill(.white.opacity(0.18)).frame(height: 0.5)
                 Button {
                     if note.url == nil { store.selectedID = note.id; store.showWelcome?() }
                     else { store.resume() }
                 } label: {
                     HStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(note.url == nil ? "Relire le fil" : note.timeLabel.map { "Reprendre à " + $0 } ?? "Reprendre")
-                                .font(.system(size: 16, weight: .semibold)).lineLimit(1)
-                            Text(note.url == nil ? "Dans Mes fils" : note.sourceLabel)
-                                .font(.system(size: 12)).foregroundStyle(.white.opacity(0.8)).lineLimit(1)
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: note.context?.kind == "video" ? "play.fill" : "arrow.up.right")
-                            .font(.system(size: 16, weight: .medium))
-                    }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                }.buttonStyle(RepriseSurfaceAction())
-                    .accessibilityLabel(note.url == nil ? "Relire le fil dans Mes fils" : note.actionLabel)
+                        Text(note.url == nil ? "Relire le fil" : note.actionLabel)
+                        Image(systemName: "arrow.up.right")
+                    }.font(.system(size: 12, weight: .medium)).foregroundStyle(Atelier.soft).frame(height: 28)
+                }.buttonStyle(.plain).accessibilityLabel(note.url == nil ? "Relire le fil" : note.actionLabel)
+                HStack(spacing: 0) {
+                    Button { store.copyIntention(note) } label: {
+                        Label(store.notice == "Extrait et source copiés." ? "Copié" : "Copier", systemImage: store.notice == "Extrait et source copiés." ? "checkmark" : "doc.on.doc")
+                            .frame(maxWidth: .infinity).frame(height: 32)
+                    }.accessibilityLabel("Copier avec la source")
+                    Rectangle().fill(.white.opacity(0.16)).frame(width: 0.5, height: 16)
+                    Button { store.edit(existing: true) } label: {
+                        Label("Annoter", systemImage: "pencil").frame(maxWidth: .infinity).frame(height: 32)
+                    }.accessibilityLabel("Ajouter une note")
+                }.font(.system(size: 11)).buttonStyle(SurfaceButton(dark: true))
+                    .background(.white.opacity(0.055), in: Capsule())
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 0.5))
             } else {
-                Text("La suite\nreste ici.").font(.system(size: 24, weight: .semibold)).tracking(-0.6)
-                Text("Sur ta page, clique sur Reprise ou utilise ⌃⇧R.")
-                    .font(.system(size: 16)).foregroundStyle(Color.black.opacity(0.66))
+                RepriseMark(color: Ink.sky).frame(width: 16, height: 16)
+                Text("Une place pour\nla suite.").font(.system(size: 18, weight: .medium))
+                Text("Sur ta page, clique sur Reprise ou utilise ⌃⇧R.").font(.system(size: 12)).foregroundStyle(.white.opacity(0.65))
                 Spacer(minLength: 8)
-                if !store.error.isEmpty {
-                    Text(store.error).font(.system(size: 12)).foregroundStyle(Color(red: 0.65, green: 0.12, blue: 0.16)).lineLimit(2)
-                }
+                if !store.error.isEmpty { Text(store.error).font(.system(size: 11)).foregroundStyle(.white).lineLimit(2) }
+                if !store.notice.isEmpty { Text(store.notice).font(.system(size: 11)).foregroundStyle(Ink.sky).lineLimit(1) }
                 Button { store.paste() } label: {
-                    HStack(spacing: 8) {
-                        Text("Coller ici").font(.system(size: 16, weight: .semibold))
-                        Spacer(minLength: 0)
-                        Image(systemName: "plus").font(.system(size: 16))
-                    }.padding(12)
-                }.buttonStyle(RepriseSurfaceAction()).accessibilityLabel("Coller une référence")
+                    Label("Coller une référence", systemImage: "plus").font(.system(size: 12)).padding(12).frame(maxWidth: .infinity)
+                }.buttonStyle(SurfaceButton(dark: true, filled: true))
             }
-        }
-        .padding(16)
-        .frame(width: 232, height: 256, alignment: .topLeading)
-        .foregroundStyle(Color(red: 0.07, green: 0.09, blue: 0.14))
-        .background {
-            ZStack(alignment: .bottomTrailing) {
-                LinearGradient(colors: [.white, Color(red: 0.92, green: 0.95, blue: 1)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                if store.note?.preview == store.note?.title && !store.targeted {
-                    RepriseMark(color: Ink.sky.opacity(0.16)).frame(width: 140, height: 140)
-                        .rotationEffect(.degrees(-12)).offset(x: 24, y: -32)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.8), lineWidth: 1))
-    }
-
-    private var controlSpine: some View {
-        VStack(spacing: 8) {
-            RepriseMark(color: Ink.sky).frame(width: 20, height: 20)
-                .frame(width: 32, height: 32).accessibilityHidden(true)
-            VStack(spacing: 4) {
-                if let note = store.note {
-                    spineButton(store.notice == "Extrait et source copiés." ? "checkmark" : "doc.on.doc", "Copier avec la source") { store.copyIntention(note) }
-                    spineButton("square.and.pencil", "Ajouter une note") { store.edit(existing: true) }
-                    spineButton("archivebox", "Ranger le fil") { store.release() }
-                } else if store.archive.previous != nil {
-                    spineButton("arrow.uturn.backward", "Annuler le rangement") { store.undo() }
-                }
-            }
-            Spacer(minLength: 0)
-            spineButton("tray", "Ouvrir Mes fils") { store.showWelcome?() }
-            spineButton(store.side == .right ? "chevron.right" : "chevron.left", "Refermer le fil") { store.fold() }
-        }
-        .padding(.vertical, 8).padding(.horizontal, 12)
-        .frame(width: 56, height: 256)
-        .background {
-            LinearGradient(stops: [.init(color: .white.opacity(0.18), location: 0), .init(color: .white.opacity(0.04), location: 0.16), .init(color: .clear, location: 0.55)],
-                           startPoint: store.side == .right ? .leading : .trailing,
-                           endPoint: store.side == .right ? .trailing : .leading)
-        }
-    }
-
-    private func spineButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 16, weight: .regular))
-                .frame(width: 32, height: 32)
-        }.buttonStyle(RepriseSpineAction()).help(label).accessibilityLabel(label)
+        }.foregroundStyle(.white.opacity(0.9)).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     private func acceptDrop(_ providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
@@ -181,48 +159,5 @@ struct CompactAction: ButtonStyle {
             .padding(.horizontal, 14).padding(.vertical, 9)
             .foregroundStyle(Color.white)
             .background(Ink.blue.opacity(configuration.isPressed ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 9))
-    }
-}
-
-/// Local hover feedback does not change the panel bounds or its hover region.
-struct RepriseSpineAction: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        SpineBody(configuration: configuration)
-    }
-    private struct SpineBody: View {
-        let configuration: ButtonStyleConfiguration
-        @State private var hovered = false
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
-        var body: some View {
-            configuration.label
-                .foregroundStyle(hovered ? Color.white : Color.white.opacity(0.68))
-                .background(.white.opacity(configuration.isPressed ? 0.20 : hovered ? 0.12 : 0.035), in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(hovered ? 0.2 : 0.07), lineWidth: 0.5))
-                .scaleEffect(reduceMotion ? 1 : configuration.isPressed ? 0.93 : 1)
-                .onHover { hovered = $0 }
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: hovered)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
-        }
-    }
-}
-
-struct RepriseSurfaceAction: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        ActionBody(configuration: configuration)
-    }
-    private struct ActionBody: View {
-        let configuration: ButtonStyleConfiguration
-        @State private var hovered = false
-        @Environment(\.accessibilityReduceMotion) private var reduceMotion
-        var body: some View {
-            configuration.label.foregroundStyle(.white)
-                .background(LinearGradient(colors: [hovered ? Ink.blue : Ink.blue.opacity(0.94), Ink.blue], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(0.2), lineWidth: 0.5))
-                .shadow(color: Ink.blue.opacity(hovered ? 0.28 : 0.12), radius: hovered ? 8 : 4, y: 4)
-                .scaleEffect(reduceMotion ? 1 : configuration.isPressed ? 0.97 : 1)
-                .onHover { hovered = $0 }
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.16), value: hovered)
-                .animation(reduceMotion ? nil : .easeOut(duration: 0.12), value: configuration.isPressed)
-        }
     }
 }
